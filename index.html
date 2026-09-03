@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>FinancePro - Gestão Financeira Inteligente</title>
+
+  <!-- iOS / Apple Web App Settings (PWA) -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FinancePro">
+  <meta name="theme-color" content="#4F46E5">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#EEF2FF',
+              100: '#E0E7FF',
+              500: '#6366F1',
+              600: '#4F46E5',
+              700: '#4338CA',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="h-full bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100 flex flex-col md:flex-row antialiased">
+
+  <!-- ================= SIDEBAR / NAVEGAÇÃO ================= -->
+  <aside class="w-full md:w-64 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col justify-between shrink-0 z-20">
+    <div>
+      <!-- Logo & Marca -->
+      <div class="p-5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/60">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-400 flex items-center justify-center text-white shadow-md shadow-indigo-500/30">
+            <i data-lucide="wallet-cards" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h1 class="font-extrabold text-base tracking-tight text-slate-900 dark:text-white">FinancePro</h1>
+            <span class="text-[11px] font-medium text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">Controle Total</span>
+          </div>
+        </div>
+
+        <button onclick="window.App.toggleTheme()" class="p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Alternar Modo Escuro">
+          <i data-lucide="moon" class="w-4 h-4 hidden dark:block"></i>
+          <i data-lucide="sun" class="w-4 h-4 block dark:hidden"></i>
+        </button>
+      </div>
+
+      <!-- Links de Navegação -->
+      <nav class="p-3 space-y-1">
+        <button onclick="window.App.switchTab('dashboard')" data-nav-tab="dashboard" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400">
+          <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
+        </button>
+        <button onclick="window.App.switchTab('transactions')" data-nav-tab="transactions" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+          <i data-lucide="arrow-left-right" class="w-4 h-4"></i> Lançamentos
+        </button>
+        <button onclick="window.App.switchTab('budgets')" data-nav-tab="budgets" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+          <i data-lucide="target" class="w-4 h-4"></i> Tetos de Gastos
+        </button>
+        <button onclick="window.App.switchTab('goals')" data-nav-tab="goals" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+          <i data-lucide="piggy-bank" class="w-4 h-4"></i> Metas & Cofrinhos
+        </button>
+        <button onclick="window.App.switchTab('accounts')" data-nav-tab="accounts" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+          <i data-lucide="landmark" class="w-4 h-4"></i> Contas & Cartões
+        </button>
+        <button onclick="window.App.switchTab('reports')" data-nav-tab="reports" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+          <i data-lucide="pie-chart" class="w-4 h-4"></i> Relatórios & Gráficos
+        </button>
+        <button onclick="window.App.switchTab('calendar')" data-nav-tab="calendar" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+          <i data-lucide="calendar" class="w-4 h-4"></i> Calendário
+        </button>
+        <button onclick="window.App.switchTab('importer')" data-nav-tab="importer" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+          <i data-lucide="file-up" class="w-4 h-4"></i> Importar / Backup
+        </button>
+      </nav>
+    </div>
+
+    <!-- Botão de Ação Rápida no Rodapé da Sidebar -->
+    <div class="p-4 border-t border-slate-100 dark:border-slate-800/60">
+      <button class="btn-open-new-tx w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm shadow-md shadow-indigo-500/25 flex items-center justify-center gap-2 transition active:scale-[0.98]">
+        <i data-lucide="plus-circle" class="w-4 h-4"></i> Novo Lançamento
+      </button>
+    </div>
+  </aside>
+
+  <!-- ================= CONTEÚDO PRINCIPAL ================= -->
+  <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+    
+    <!-- BARRA SUPERIOR -->
+    <header class="sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 z-10">
+      <!-- Seletor de Período / Mês -->
+      <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+        <button id="btn-prev-month" class="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg text-slate-600 dark:text-slate-300 transition" title="Mês Anterior">
+          <i data-lucide="chevron-left" class="w-4 h-4"></i>
+        </button>
+        <span id="current-month-display" class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 px-2 capitalize">Agosto 2026</span>
+        <input type="month" id="global-month-picker" class="opacity-0 w-0 h-0 absolute pointer-events-none">
+        <button id="btn-next-month" class="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg text-slate-600 dark:text-slate-300 transition" title="Próximo Mês">
+          <i data-lucide="chevron-right" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Atalhos de Ação Rápida -->
+      <div class="flex items-center gap-3">
+        <button onclick="window.App.openTransferModal()" class="px-3.5 py-2 text-xs sm:text-sm font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center gap-1.5 transition">
+          <i data-lucide="repeat" class="w-4 h-4 text-indigo-500"></i> Transferir
+        </button>
+        <button class="btn-open-new-tx px-4 py-2 text-xs sm:text-sm font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm flex items-center gap-1.5 transition">
+          <i data-lucide="plus" class="w-4 h-4"></i> Lançar
+        </button>
+      </div>
+    </header>
+
+    <!-- CONTAINER DAS VIEWS -->
+    <main class="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6">
+
+      <!-- ================= 1. VIEW: DASHBOARD ================= -->
+      <section id="view-dashboard" class="view-section space-y-6 animate-fade-in">
+        
+        <!-- Cards de Indicadores Principais -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Receitas -->
+          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 flex items-center justify-center">
+              <i data-lucide="arrow-down-left" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Receitas do Mês</span>
+              <div id="dash-income" class="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400">R$ 0,00</div>
+            </div>
+          </div>
+
+          <!-- Despesas -->
+          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400 flex items-center justify-center">
+              <i data-lucide="arrow-up-right" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Despesas do Mês</span>
+              <div id="dash-expense" class="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400">R$ 0,00</div>
+            </div>
+          </div>
+
+          <!-- Saldo / Balanço -->
+          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400 flex items-center justify-center">
+              <i data-lucide="scale" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Balanço do Mês</span>
+              <div id="dash-balance" class="text-xl sm:text-2xl font-black">R$ 0,00</div>
+            </div>
+          </div>
+
+          <!-- Taxa de Economia -->
+          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400 flex items-center justify-center">
+              <i data-lucide="percent" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Taxa de Poupança</span>
+              <div id="dash-savings-rate" class="text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-400">0%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Seção de Alertas e Insights Inteligentes -->
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+              <i data-lucide="sparkles" class="w-4 h-4 text-indigo-500"></i> Insights & Alertas Financeiros
+            </h2>
+            <div id="dash-budget-status" class="text-xs font-semibold"></div>
+          </div>
+          <div id="dash-insights-container" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <!-- Injetado dinamicamente -->
+          </div>
+        </div>
+
+        <!-- Linha: Gráficos de Categorias + Tetos Rápidos -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Gráfico de Rosca -->
+          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm flex flex-col">
+            <h2 class="text-base font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
+              <i data-lucide="pie-chart" class="w-4 h-4 text-indigo-500"></i> Gastos por Categoria
+            </h2>
+            <div class="relative flex-1 min-h-[260px] flex items-center justify-center">
+              <canvas id="dash-chart-categories"></canvas>
+            </div>
+          </div>
+
+          <!-- Acompanhamento de Tetos de Gastos Rápidos -->
+          <div class="lg:col-span-2 bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <h2 class="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                  <i data-lucide="target" class="w-4 h-4 text-indigo-500"></i> Acompanhamento de Tetos (Orçamentos)
+                </h2>
+                <button onclick="window.App.switchTab('budgets')" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline">
+                  Ver Todos & Gerenciar &rarr;
+                </button>
+              </div>
+              <div id="dash-quick-budgets" class="space-y-3">
+                <!-- Injetado dinamicamente -->
+              </div>
+            </div>
+
+            <!-- Card de Patrimônio -->
+            <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700/60 flex items-center justify-between text-xs sm:text-sm">
+              <span class="text-slate-500">Patrimônio Líquido Acumulado:</span>
+              <span id="dash-networth" class="font-extrabold text-indigo-600 dark:text-indigo-400 text-base">R$ 0,00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Últimas Transações -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm overflow-hidden">
+          <div class="p-5 border-b border-slate-100 dark:border-slate-700/60 flex items-center justify-between">
+            <h2 class="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <i data-lucide="clock" class="w-4 h-4 text-indigo-500"></i> Últimos Lançamentos
+            </h2>
+            <button onclick="window.App.switchTab('transactions')" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline">
+              Ver Todos os Lançamentos &rarr;
+            </button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-50/80 dark:bg-slate-900/40 text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200/60 dark:border-slate-700">
+                  <th class="py-2.5 px-3">Descrição</th>
+                  <th class="py-2.5 px-3">Categoria</th>
+                  <th class="py-2.5 px-3">Data</th>
+                  <th class="py-2.5 px-3 text-right">Valor</th>
+                  <th class="py-2.5 px-3 text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody id="dash-recent-transactions">
+                <!-- Injetado dinamicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 2. VIEW: TRANSAÇÕES ================= -->
+      <section id="view-transactions" class="view-section space-y-6 hidden animate-fade-in">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-black text-slate-900 dark:text-slate-100">Lançamentos Financeiros</h2>
+            <p class="text-xs sm:text-sm text-slate-500">Cadastre e gerencie receitas, despesas e compras parceladas.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span id="tx-count-badge" class="px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-300">0 lançamentos</span>
+            <button class="btn-open-new-tx px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-sm transition">
+              <i data-lucide="plus-circle" class="w-4 h-4"></i> Novo Lançamento
+            </button>
+          </div>
+        </div>
+
+        <!-- Filtros da Tabela -->
+        <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          <input type="text" id="filter-search" placeholder="🔍 Buscar por descrição ou nota..." class="px-3.5 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          
+          <select id="filter-type" class="px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm">
+            <option value="all">Todos os Tipos</option>
+            <option value="expense">Apenas Despesas</option>
+            <option value="income">Apenas Receitas</option>
+          </select>
+
+          <select id="filter-category" class="px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm">
+            <option value="all">Todas as Categorias</option>
+          </select>
+
+          <select id="filter-account" class="px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm">
+            <option value="all">Todas as Contas</option>
+          </select>
+
+          <select id="filter-status" class="px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm">
+            <option value="all">Todos os Status</option>
+            <option value="paid">Efetivados / Pagos</option>
+            <option value="pending">Pendentes</option>
+          </select>
+        </div>
+
+        <!-- Barra de Ações em Lote para Selecionados -->
+        <div id="tx-batch-bar" class="hidden flex items-center justify-between bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-800 p-3.5 rounded-2xl animate-fade-in">
+          <div class="flex items-center gap-2 text-xs sm:text-sm font-bold text-indigo-900 dark:text-indigo-200">
+            <i data-lucide="check-square" class="w-4 h-4 text-indigo-600 dark:text-indigo-400"></i>
+            <span id="tx-selected-count">0 selecionados</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="window.App.clearSelectedTransactions()" class="px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 rounded-lg transition">
+              Desmarcar
+            </button>
+            <button onclick="window.App.deleteSelectedTransactions()" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 shadow-sm transition">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Excluir Selecionados
+            </button>
+          </div>
+        </div>
+
+        <!-- Tabela Completa de Transações -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-50 dark:bg-slate-900/60 text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200 dark:border-slate-700">
+                  <th class="py-3 px-3 w-10 text-center">
+                    <input type="checkbox" id="tx-select-all" class="rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer" title="Selecionar todos da lista">
+                  </th>
+                  <th class="py-3 px-3">Data</th>
+                  <th class="py-3 px-3">Descrição</th>
+                  <th class="py-3 px-3">Categoria</th>
+                  <th class="py-3 px-3">Conta/Cartão</th>
+                  <th class="py-3 px-3 text-right">Valor</th>
+                  <th class="py-3 px-3 text-center">Status</th>
+                  <th class="py-3 px-3 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="transactions-table-body">
+                <!-- Injetado dinamicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 3. VIEW: TETOS DE GASTOS ================= -->
+      <section id="view-budgets" class="view-section space-y-6 hidden animate-fade-in">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-black text-slate-900 dark:text-slate-100">Tetos de Gastos & Orçamento Mensal</h2>
+            <p class="text-xs sm:text-sm text-slate-500">Defina limites máximos para cada categoria e monitore onde você está economizando ou extrapolando.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="window.App.openCategoryManagerModal()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 transition">
+              <i data-lucide="settings-2" class="w-4 h-4 text-indigo-500"></i> Gerenciar Categorias
+            </button>
+            <button onclick="window.App.openCategoryModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-sm transition">
+              <i data-lucide="plus-circle" class="w-4 h-4"></i> Nova Categoria
+            </button>
+          </div>
+        </div>
+
+        <!-- Cards de Resumo do Orçamento -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700">
+            <span class="text-xs font-bold text-slate-400 uppercase">Teto Total Orçado</span>
+            <div id="budget-total-budgeted" class="text-xl font-black text-indigo-600 dark:text-indigo-400 mt-1">R$ 0,00</div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700">
+            <span class="text-xs font-bold text-slate-400 uppercase">Gasto Total Realizado</span>
+            <div id="budget-total-spent" class="text-xl font-black text-slate-900 dark:text-slate-100 mt-1">R$ 0,00</div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700">
+            <span class="text-xs font-bold text-slate-400 uppercase">Economia Gerada</span>
+            <div id="budget-total-saved" class="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-1">R$ 0,00</div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700">
+            <span class="text-xs font-bold text-slate-400 uppercase">Total Excedido</span>
+            <div id="budget-total-exceeded" class="text-xl font-black text-rose-600 dark:text-rose-400 mt-1">R$ 0,00</div>
+          </div>
+        </div>
+
+        <!-- Grid de Cards de Tetos por Categoria -->
+        <div id="budgets-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <!-- Injetado dinamicamente -->
+        </div>
+      </section>
+
+      <!-- ================= 4. VIEW: METAS & COFRINHOS ================= -->
+      <section id="view-goals" class="view-section space-y-6 hidden animate-fade-in">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-black text-slate-900 dark:text-slate-100">Metas Financeiras & Cofrinhos</h2>
+            <p class="text-xs sm:text-sm text-slate-500">Guarde dinheiro para objetivos específicos e acompanhe o progresso até a realização.</p>
+          </div>
+          <button onclick="window.App.openGoalModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-sm transition">
+            <i data-lucide="plus-circle" class="w-4 h-4"></i> Nova Meta
+          </button>
+        </div>
+
+        <!-- Resumo de Metas -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700">
+            <span class="text-xs font-bold text-slate-400 uppercase">Total Acumulado</span>
+            <div id="goals-total-accumulated" class="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">R$ 0,00</div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700">
+            <span class="text-xs font-bold text-slate-400 uppercase">Alvo Total das Metas</span>
+            <div id="goals-total-target" class="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-1">R$ 0,00</div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700">
+            <span class="text-xs font-bold text-slate-400 uppercase">Falta Guardar</span>
+            <div id="goals-total-remaining" class="text-2xl font-black text-slate-700 dark:text-slate-300 mt-1">R$ 0,00</div>
+          </div>
+        </div>
+
+        <!-- Grid de Metas -->
+        <div id="goals-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <!-- Injetado dinamicamente -->
+        </div>
+      </section>
+
+      <!-- ================= 5. VIEW: CONTAS & CARTÕES ================= -->
+      <section id="view-accounts" class="view-section space-y-6 hidden animate-fade-in">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-black text-slate-900 dark:text-slate-100">Contas & Cartões de Crédito</h2>
+            <p class="text-xs sm:text-sm text-slate-500">Acompanhe seus saldos disponíveis em bancos, carteira e controle o limite e fatura dos cartões.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="window.App.openTransferModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 transition">
+              <i data-lucide="repeat" class="w-4 h-4 text-indigo-500"></i> Transferência
+            </button>
+            <button onclick="window.App.openAccountModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-sm transition">
+              <i data-lucide="plus-circle" class="w-4 h-4"></i> Nova Conta / Cartão
+            </button>
+          </div>
+        </div>
+
+        <!-- Resumo Patrimonial -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700">
+            <span class="text-xs font-bold text-slate-400 uppercase">Patrimônio Líquido</span>
+            <div id="acc-net-worth" class="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-1">R$ 0,00</div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700">
+            <span class="text-xs font-bold text-slate-400 uppercase">Saldo em Dinheiro / Bancos</span>
+            <div id="acc-total-cash" class="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">R$ 0,00</div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700">
+            <span class="text-xs font-bold text-slate-400 uppercase">Faturas em Aberto (Cartões)</span>
+            <div id="acc-total-credit" class="text-2xl font-black text-rose-600 dark:text-rose-400 mt-1">R$ 0,00</div>
+          </div>
+        </div>
+
+        <!-- Grid de Contas -->
+        <div id="accounts-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <!-- Injetado dinamicamente -->
+        </div>
+      </section>
+
+      <!-- ================= 6. VIEW: RELATÓRIOS & GRÁFICOS ================= -->
+      <section id="view-reports" class="view-section space-y-6 hidden animate-fade-in">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-black text-slate-900 dark:text-slate-100">Relatórios & Análise Comparativa</h2>
+            <p class="text-xs sm:text-sm text-slate-500">Métricas completas de evolução e comparação de Orçado vs. Realizado.</p>
+          </div>
+          <button onclick="window.print()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 transition">
+            <i data-lucide="printer" class="w-4 h-4"></i> Imprimir / Salvar PDF
+          </button>
+        </div>
+
+        <!-- Gráfico Comparativo: Orçado vs Realizado -->
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm">
+          <h3 class="text-base font-bold text-slate-900 dark:text-slate-100 mb-3 flex items-center gap-2">
+            <i data-lucide="bar-chart-3" class="w-4 h-4 text-indigo-500"></i> Comparativo por Categoria: Teto Orçado vs. Gasto Real
+          </h3>
+          <div class="relative h-72">
+            <canvas id="report-chart-budgets"></canvas>
+          </div>
+        </div>
+
+        <!-- Gráficos: Pizza + Evolução 6 Meses -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm flex flex-col">
+            <h3 class="text-base font-bold text-slate-900 dark:text-slate-100 mb-3 flex items-center gap-2">
+              <i data-lucide="pie-chart" class="w-4 h-4 text-indigo-500"></i> Distribuição de Gastos do Mês
+            </h3>
+            <div class="relative flex-1 min-h-[260px]">
+              <canvas id="report-chart-categories"></canvas>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm flex flex-col">
+            <h3 class="text-base font-bold text-slate-900 dark:text-slate-100 mb-3 flex items-center gap-2">
+              <i data-lucide="trending-up" class="w-4 h-4 text-emerald-500"></i> Fluxo de Caixa (Últimos 6 Meses)
+            </h3>
+            <div class="relative flex-1 min-h-[260px]">
+              <canvas id="report-chart-cashflow"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabela Resumo Analítico -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm overflow-hidden">
+          <div class="p-5 border-b border-slate-100 dark:border-slate-700/60 flex items-center justify-between">
+            <h3 class="text-base font-bold text-slate-900 dark:text-slate-100">Detalhamento Analítico de Categorias</h3>
+            <button onclick="window.Importer.exportTransactionsToCSV()" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1">
+              <i data-lucide="download" class="w-3.5 h-3.5"></i> Exportar CSV
+            </button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-50 dark:bg-slate-900/60 text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200 dark:border-slate-700">
+                  <th class="py-3 px-3">Categoria</th>
+                  <th class="py-3 px-3 text-right">Teto Máximo</th>
+                  <th class="py-3 px-3 text-right">Gasto Realizado</th>
+                  <th class="py-3 px-3 text-right">Saldo / Sobra</th>
+                  <th class="py-3 px-3 text-center">% Consumido</th>
+                </tr>
+              </thead>
+              <tbody id="report-summary-table-body">
+                <!-- Injetado dinamicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 7. VIEW: CALENDÁRIO ================= -->
+      <section id="view-calendar" class="view-section space-y-6 hidden animate-fade-in">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-black text-slate-900 dark:text-slate-100">Calendário de Contas & Fluxo</h2>
+            <p class="text-xs sm:text-sm text-slate-500">Visualize datas de vencimento, pagamentos diários e marque como pago com 1 clique.</p>
+          </div>
+          <div class="text-base font-extrabold text-indigo-600 dark:text-indigo-400 capitalize" id="cal-month-title"></div>
+        </div>
+
+        <!-- Grid do Calendário -->
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm">
+          <!-- Cabeçalho dos Dias da Semana -->
+          <div class="grid grid-cols-7 gap-2 text-center text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+            <div>Dom</div>
+            <div>Seg</div>
+            <div>Ter</div>
+            <div>Qua</div>
+            <div>Qui</div>
+            <div>Sex</div>
+            <div>Sáb</div>
+          </div>
+          <!-- Células dos Dias -->
+          <div id="calendar-grid-days" class="grid grid-cols-7 gap-2">
+            <!-- Injetado dinamicamente -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 8. VIEW: IMPORTAR & BACKUP ================= -->
+      <section id="view-importer" class="view-section space-y-6 hidden animate-fade-in">
+        <div>
+          <h2 class="text-xl font-black text-slate-900 dark:text-slate-100">Importação de Extratos & Backup Seguro</h2>
+          <p class="text-xs sm:text-sm text-slate-500">Importe arquivos de bancos brasileiros ou faça backup completo dos seus dados.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Card de Importação Bancária -->
+          <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm space-y-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400 flex items-center justify-center">
+              <i data-lucide="file-up" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-slate-900 dark:text-slate-100">Importar Extrato Bancário (.OFX ou .CSV)</h3>
+              <p class="text-xs text-slate-500 mt-1">Compatível com Nubank, Banco Inter, Itaú, Bradesco, Santander, Banco do Brasil, etc.</p>
+            </div>
+
+            <div class="p-4 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl text-center hover:border-indigo-400 transition cursor-pointer relative">
+              <input type="file" id="import-file-input" accept=".ofx, .csv, .txt" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
+              <i data-lucide="upload-cloud" class="w-8 h-8 text-indigo-500 mx-auto mb-2"></i>
+              <span class="text-sm font-semibold text-slate-700 dark:text-slate-300 block">Clique para selecionar o arquivo</span>
+              <span class="text-xs text-slate-400 block mt-0.5">Suporta .OFX e .CSV</span>
+            </div>
+          </div>
+
+          <!-- Card de Backup e Restauração -->
+          <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm space-y-4">
+            <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 flex items-center justify-center">
+              <i data-lucide="database" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-slate-900 dark:text-slate-100">Backup Completo & Exportação</h3>
+              <p class="text-xs text-slate-500 mt-1">Salve todos os seus lançamentos, categorias, tetos e metas em um arquivo JSON para nunca perder nada.</p>
+            </div>
+
+            <div class="flex flex-col gap-2 pt-2">
+              <button onclick="window.State.exportBackupJSON()" class="py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition">
+                <i data-lucide="download" class="w-4 h-4"></i> Baixar Arquivo de Backup (.JSON)
+              </button>
+              <label class="py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition cursor-pointer">
+                <i data-lucide="upload" class="w-4 h-4"></i> Restaurar / Carregar Backup (.JSON)
+                <input type="file" id="restore-json-input" accept=".json" class="hidden" onchange="window.App.handleRestoreJSON(event)">
+              </label>
+              <button onclick="window.Importer.exportTransactionsToCSV()" class="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition">
+                <i data-lucide="sheet" class="w-4 h-4"></i> Exportar Lançamentos (.CSV / Excel)
+              </button>
+              <button onclick="if(confirm('Restaurar dados de demonstração padrão?')) { window.State.resetToSampleData(); window.App.showToast('Dados restaurados!', 'info'); }" class="py-2 px-4 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition text-center">
+                Recarregar Dados de Demonstração
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ================= MODAIS DA APLICAÇÃO ================= -->
+
+  <!-- 1. MODAL: NOVO LANÇAMENTO -->
+  <div id="modal-transaction" class="app-modal fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700 max-h-[90vh] overflow-y-auto animate-fade-in">
+      <div class="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-slate-700/60 pb-3">
+        <h3 id="tx-modal-title" class="text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+          <i data-lucide="plus-circle" class="w-5 h-5 text-indigo-500"></i> Novo Lançamento
+        </h3>
+        <button onclick="window.App.closeAllModals()" class="text-slate-400 hover:text-slate-600 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="form-new-transaction" class="space-y-4">
+        <input type="hidden" id="tx-edit-id" value="">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Tipo</label>
+            <select id="tx-type" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold">
+              <option value="expense">🔴 Despesa</option>
+              <option value="income">🟢 Receita</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Valor (R$)</label>
+            <input type="number" step="0.01" id="tx-amount" placeholder="0,00" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-900 dark:text-slate-100">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Descrição</label>
+          <input type="text" id="tx-description" placeholder="Ex: Supermercado, Aluguel, Salário..." required class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Categoria</label>
+            <select id="tx-category" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm">
+              <!-- Injetado dinamicamente -->
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Conta / Cartão</label>
+            <select id="tx-account" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm">
+              <!-- Injetado dinamicamente -->
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Data</label>
+            <input type="date" id="tx-date" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Status</label>
+            <select id="tx-status" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold">
+              <option value="paid">✓ Pago / Recebido</option>
+              <option value="pending">⏳ Pendente</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Opções Avançadas: Parcelamento e Recorrência -->
+        <div class="pt-2 border-t border-slate-100 dark:border-slate-700 space-y-3">
+          <div class="flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-slate-300">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="tx-is-installment" class="rounded text-indigo-600 focus:ring-indigo-500">
+              Compra Parcelada (Nx)
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="tx-is-recurring" class="rounded text-indigo-600 focus:ring-indigo-500">
+              Despesa/Receita Fixa Recorrente
+            </label>
+          </div>
+
+          <div id="tx-installment-box" class="hidden p-3 bg-purple-50 dark:bg-purple-950/40 rounded-xl border border-purple-200 dark:border-purple-800/50">
+            <label class="block text-xs font-bold text-purple-700 dark:text-purple-300 mb-1">Número de Parcelas</label>
+            <input type="number" id="tx-installments-count" min="2" max="48" value="2" class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 rounded-lg text-sm">
+            <span class="text-[11px] text-purple-600 dark:text-purple-400 mt-1 block">Serão criados automaticamente os lançamentos dos meses futuros.</span>
+          </div>
+
+          <div id="tx-recurring-box" class="hidden p-3 bg-blue-50 dark:bg-blue-950/40 rounded-xl border border-blue-200 dark:border-blue-800/50">
+            <label class="block text-xs font-bold text-blue-700 dark:text-blue-300 mb-1">Frequência da Recorrência</label>
+            <select id="tx-recurring-freq" class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-blue-200 dark:border-blue-800 rounded-lg text-sm">
+              <option value="monthly">Mensal (Todo mês)</option>
+              <option value="weekly">Semanal</option>
+              <option value="yearly">Anual</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Observações (Opcional)</label>
+          <input type="text" id="tx-notes" placeholder="Ex: Número do cupom fiscal, motivo..." class="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs">
+        </div>
+
+        <div class="pt-3 flex justify-end gap-2">
+          <button type="button" onclick="window.App.closeAllModals()" class="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition">Cancelar</button>
+          <button type="submit" id="tx-modal-submit-btn" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition">Salvar Lançamento</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. MODAL: NOVA META FINANCEIRA -->
+  <div id="modal-goal" class="app-modal fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700 animate-fade-in">
+      <div class="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-slate-700/60 pb-3">
+        <h3 id="goal-modal-title" class="text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+          <i data-lucide="piggy-bank" class="w-5 h-5 text-indigo-500"></i> Nova Meta Financeira
+        </h3>
+        <button onclick="window.App.closeAllModals()" class="text-slate-400 hover:text-slate-600 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="form-new-goal" class="space-y-4">
+        <input type="hidden" id="goal-edit-id" value="">
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nome do Objetivo</label>
+          <input type="text" id="goal-name" placeholder="Ex: Reserva de Emergência, Viagem..." required class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Valor Alvo (R$)</label>
+            <input type="number" step="0.01" id="goal-target" placeholder="10000.00" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Valor Acumulado / Inicial (R$)</label>
+            <input type="number" step="0.01" id="goal-initial" placeholder="0.00" value="0" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Data Limite (Prazo)</label>
+            <input type="date" id="goal-deadline" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Cor do Card</label>
+            <input type="color" id="goal-color" value="#3B82F6" class="w-full h-10 p-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer">
+          </div>
+        </div>
+
+        <div class="pt-3 flex justify-end gap-2">
+          <button type="button" onclick="window.App.closeAllModals()" class="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition">Cancelar</button>
+          <button type="submit" id="goal-modal-submit-btn" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition">Criar Meta</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. MODAL: NOVA CONTA / CARTÃO -->
+  <div id="modal-account" class="app-modal fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700 animate-fade-in">
+      <div class="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-slate-700/60 pb-3">
+        <h3 id="account-modal-title" class="text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+          <i data-lucide="landmark" class="w-5 h-5 text-indigo-500"></i> Nova Conta / Cartão
+        </h3>
+        <button onclick="window.App.closeAllModals()" class="text-slate-400 hover:text-slate-600 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="form-new-account" class="space-y-4">
+        <input type="hidden" id="account-edit-id" value="">
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nome da Conta / Cartão</label>
+          <input type="text" id="account-name" placeholder="Ex: Nubank, Itaú, Cartão XP..." required class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Tipo</label>
+            <select id="account-type" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm">
+              <option value="checking">Conta Corrente</option>
+              <option value="investment">Investimento / Reserva</option>
+              <option value="cash">Carteira (Dinheiro Físico)</option>
+              <option value="credit_card">Cartão de Crédito</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Cor</label>
+            <input type="color" id="account-color" value="#6366F1" class="w-full h-10 p-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer">
+          </div>
+        </div>
+
+        <div id="box-account-balance">
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Saldo Base / Inicial (R$)</label>
+          <input type="number" step="0.01" id="account-initial-balance" placeholder="0.00" value="0" class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold">
+          <span class="text-[11px] text-slate-400 mt-1 block">Altere aqui o saldo inicial ou valor base da conta.</span>
+        </div>
+
+        <div id="box-account-card-fields" class="hidden space-y-3 p-3 bg-purple-50 dark:bg-purple-950/40 rounded-xl border border-purple-200 dark:border-purple-800">
+          <div>
+            <label class="block text-xs font-bold text-purple-700 dark:text-purple-300 uppercase mb-1">Limite Total de Crédito (R$)</label>
+            <input type="number" step="0.01" id="account-credit-limit" placeholder="5000.00" class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 rounded-lg text-sm font-bold">
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] font-bold text-purple-700 dark:text-purple-300 mb-1">Dia Fechamento</label>
+              <input type="number" min="1" max="31" id="account-closing-day" placeholder="25" class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 rounded-lg text-xs">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-purple-700 dark:text-purple-300 mb-1">Dia Vencimento</label>
+              <input type="number" min="1" max="31" id="account-due-day" placeholder="5" class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 rounded-lg text-xs">
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-3 flex justify-end gap-2">
+          <button type="button" onclick="window.App.closeAllModals()" class="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition">Cancelar</button>
+          <button type="submit" id="account-modal-submit-btn" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition">Salvar Conta</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 4. MODAL: TRANSFERÊNCIA ENTRE CONTAS -->
+  <div id="modal-transfer" class="app-modal fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700 animate-fade-in">
+      <div class="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-slate-700/60 pb-3">
+        <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+          <i data-lucide="repeat" class="w-5 h-5 text-indigo-500"></i> Transferência entre Contas
+        </h3>
+        <button onclick="window.App.closeAllModals()" class="text-slate-400 hover:text-slate-600 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="form-transfer" class="space-y-4">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">De (Origem)</label>
+            <select id="transf-from" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm"></select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Para (Destino)</label>
+            <select id="transf-to" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm"></select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Valor (R$)</label>
+            <input type="number" step="0.01" id="transf-amount" placeholder="0.00" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Data</label>
+            <input type="date" id="transf-date" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Observações</label>
+          <input type="text" id="transf-notes" placeholder="Ex: Pagamento de fatura, aporte..." class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs">
+        </div>
+
+        <div class="pt-3 flex justify-end gap-2">
+          <button type="button" onclick="window.App.closeAllModals()" class="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition">Cancelar</button>
+          <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition">Transferir Agora</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 5. MODAL: DETALHES DO DIA (CALENDÁRIO) -->
+  <div id="modal-day-details" class="app-modal fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700 animate-fade-in">
+      <div class="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-slate-700/60 pb-3">
+        <h3 id="day-modal-title" class="text-base font-bold text-slate-900 dark:text-slate-100">Lançamentos do Dia</h3>
+        <button onclick="window.App.closeAllModals()" class="text-slate-400 hover:text-slate-600 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div id="day-modal-tx-list" class="space-y-2 max-h-72 overflow-y-auto">
+        <!-- Injetado dinamicamente -->
+      </div>
+
+      <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700 flex justify-end">
+        <button onclick="window.App.closeAllModals()" class="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. MODAL: NOVA / EDITAR CATEGORIA -->
+  <div id="modal-category" class="app-modal fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700 animate-fade-in">
+      <div class="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-slate-700/60 pb-3">
+        <h3 id="cat-modal-title" class="text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+          <i data-lucide="tag" class="w-5 h-5 text-indigo-500"></i> Nova Categoria
+        </h3>
+        <button onclick="window.App.closeAllModals()" class="text-slate-400 hover:text-slate-600 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="form-category" class="space-y-4">
+        <input type="hidden" id="cat-edit-id" value="">
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nome da Categoria</label>
+          <input type="text" id="cat-name" placeholder="Ex: Farmácia, Pet Shop, Cursos..." required class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Tipo</label>
+            <select id="cat-type" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold">
+              <option value="expense">🔴 Despesa</option>
+              <option value="income">🟢 Receita</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Cor</label>
+            <input type="color" id="cat-color" value="#6366F1" class="w-full h-10 p-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Teto Máximo Mensal (R$) [Opcional]</label>
+          <input type="number" step="0.01" id="cat-budget" placeholder="0.00" value="0" class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold">
+          <span class="text-[11px] text-slate-400 mt-1 block">Para despesas, define o limite mensal de alerta.</span>
+        </div>
+
+        <div class="pt-3 flex justify-end gap-2">
+          <button type="button" onclick="window.App.closeAllModals()" class="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition">Cancelar</button>
+          <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition">Salvar Categoria</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 7. MODAL: GERENCIADOR DE TODAS AS CATEGORIAS -->
+  <div id="modal-category-manager" class="app-modal fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700 max-h-[85vh] overflow-y-auto animate-fade-in">
+      <div class="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-slate-700/60 pb-3">
+        <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+          <i data-lucide="settings-2" class="w-5 h-5 text-indigo-500"></i> Gerenciar Categorias
+        </h3>
+        <button onclick="window.App.closeAllModals()" class="text-slate-400 hover:text-slate-600 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="flex justify-between items-center mb-3">
+        <span class="text-xs text-slate-500">Categorias cadastradas no sistema</span>
+        <button onclick="window.App.openCategoryModal()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg flex items-center gap-1">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i> Nova
+        </button>
+      </div>
+
+      <div id="cat-manager-list" class="space-y-2">
+        <!-- Injetado dinamicamente -->
+      </div>
+
+      <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700 flex justify-end">
+        <button onclick="window.App.closeAllModals()" class="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTAINER DE TOASTS -->
+  <div id="toast-container"></div>
+
+  <!-- SCRIPTS DA APLICAÇÃO -->
+  <script src="js/state.js"></script>
+  <script src="js/transactions.js"></script>
+  <script src="js/budgets.js"></script>
+  <script src="js/goals.js"></script>
+  <script src="js/accounts.js"></script>
+  <script src="js/reports.js"></script>
+  <script src="js/calendar.js"></script>
+  <script src="js/importer.js"></script>
+  <script src="js/insights.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
