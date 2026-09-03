@@ -1453,6 +1453,25 @@ class AppController {
 
     reader.readAsText(file, 'ISO-8859-1');
   }
+
+  // --- Restauração de Backup JSON ---
+  handleRestoreJSON(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target.result;
+      const success = window.State.importBackupJSON(content);
+      if (success) {
+        this.showToast('Backup restaurado com sucesso! Todos os seus dados foram carregados.', 'success');
+        this.renderCurrentView();
+      } else {
+        alert('Erro ao restaurar o arquivo de backup. Verifique se é um arquivo .json válido.');
+      }
+    };
+    reader.readAsText(file, 'UTF-8');
+  }
 }
 
 // Inicializar aplicação
