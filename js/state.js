@@ -2,7 +2,7 @@
  * state.js - Gerenciador de Estado Reativo e Persistência Local (LocalStorage)
  */
 
-const STORAGE_KEY = 'finance_pro_data_v1';
+const STORAGE_KEY = 'finance_pro_data_v2';
 
 // Estrutura inicial padrão de categorias
 const DEFAULT_CATEGORIES = [
@@ -24,13 +24,13 @@ const DEFAULT_CATEGORIES = [
   { id: 'cat_outros_rec', name: 'Outras Receitas', type: 'income', icon: 'wallet', color: '#6EE7B7', budget: 0 }
 ];
 
-// Contas e Cartões Padrão
+// Contas e Cartões Padrão do Usuário
 const DEFAULT_ACCOUNTS = [
-  { id: 'acc_nubank', name: 'Nubank (Conta Principal)', type: 'checking', initialBalance: 2850.00, color: '#820AD1', icon: 'landmark' },
-  { id: 'acc_itau', name: 'Itaú Personalité', type: 'checking', initialBalance: 1420.50, color: '#EC7000', icon: 'landmark' },
-  { id: 'acc_wallet', name: 'Carteira (Dinheiro Físico)', type: 'cash', initialBalance: 280.00, color: '#10B981', icon: 'coins' },
-  { id: 'acc_poupanca', name: 'Reserva no CDI', type: 'investment', initialBalance: 8500.00, color: '#2563EB', icon: 'piggy-bank' },
-  { id: 'card_nubank', name: 'Nubank Ultravioleta', type: 'credit_card', limit: 8000.00, closingDay: 25, dueDay: 5, color: '#4C1D95', icon: 'credit-card' }
+  { id: 'acc_bb', name: 'Banco do Brasil', type: 'checking', initialBalance: 3554.75, color: '#FAE500', icon: 'landmark', limit: 0, closingDay: null, dueDay: null },
+  { id: 'acc_tesouro', name: 'Tesouro Direto 2027', type: 'investment', initialBalance: 4154.27, color: '#FF0000', icon: 'landmark', limit: 0, closingDay: null, dueDay: null },
+  { id: 'card_nubank_amor', name: 'Nubank (Amor)', type: 'credit_card', initialBalance: 0, limit: 1000.00, closingDay: 8, dueDay: 15, color: '#6366F1', icon: 'credit-card' },
+  { id: 'card_inter', name: 'Banco Inter', type: 'credit_card', initialBalance: 0, limit: 3898.96, closingDay: 6, dueDay: 12, color: '#FF8800', icon: 'credit-card' },
+  { id: 'acc_mercadopago', name: 'Mercado Pago', type: 'investment', initialBalance: 1054.82, color: '#00AFFA', icon: 'landmark', limit: 0, closingDay: null, dueDay: null }
 ];
 
 // Metas Financeiras Padrão
