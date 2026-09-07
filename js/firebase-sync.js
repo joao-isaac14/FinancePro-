@@ -1,6 +1,12 @@
-/**
- * firebase-sync.js - Gerenciador de Autenticação e Sincronização em Tempo Real com o Google Firebase
- */
+const DEFAULT_FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBOGmGLZxrOrK5yJ2kjioDM2QUEKL9Y4Js",
+  authDomain: "financepro-fdaff.firebaseapp.com",
+  projectId: "financepro-fdaff",
+  storageBucket: "financepro-fdaff.firebasestorage.app",
+  messagingSenderId: "423055355623",
+  appId: "1:423055355623:web:4ec9c7a2b78a9040bbbc42",
+  measurementId: "G-SMG7Z5F50D"
+};
 
 class FirebaseSyncManager {
   constructor() {
@@ -10,6 +16,7 @@ class FirebaseSyncManager {
     this.currentUser = null;
     this.unsubscribeFirestore = null;
     this.isSyncing = false;
+    this.isLocalSaving = false;
     this.syncListeners = [];
     this.authListeners = [];
 
@@ -29,7 +36,7 @@ class FirebaseSyncManager {
         console.error('Erro ao ler configuração salva do Firebase:', e);
       }
     }
-    return null;
+    return DEFAULT_FIREBASE_CONFIG;
   }
 
   saveFirebaseConfig(config) {
