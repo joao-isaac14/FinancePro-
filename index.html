@@ -118,13 +118,23 @@
         </button>
       </div>
 
-      <!-- Atalhos de Ação Rápida -->
-      <div class="flex items-center gap-3">
-        <button onclick="window.App.openTransferModal()" class="px-3.5 py-2 text-xs sm:text-sm font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center gap-1.5 transition">
-          <i data-lucide="repeat" class="w-4 h-4 text-indigo-500"></i> Transferir
+      <!-- Status de Sincronização & Atalhos de Ação Rápida -->
+      <div class="flex items-center flex-wrap gap-2">
+        <button id="btn-sync-status" onclick="window.App.openAuthModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition" title="Status da Sincronização em Nuvem">
+          <span id="sync-dot" class="w-2 h-2 rounded-full bg-slate-400"></span>
+          <span id="sync-text">Conectar Nuvem</span>
         </button>
-        <button class="btn-open-new-tx px-4 py-2 text-xs sm:text-sm font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm flex items-center gap-1.5 transition">
-          <i data-lucide="plus" class="w-4 h-4"></i> Lançar
+
+        <button id="btn-auth-profile" onclick="window.App.openAuthModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/80 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 transition">
+          <i data-lucide="user" class="w-3.5 h-3.5"></i>
+          <span id="auth-user-label">Entrar / Cadastrar</span>
+        </button>
+
+        <button onclick="window.App.openTransferModal()" class="px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center gap-1.5 transition">
+          <i data-lucide="repeat" class="w-3.5 h-3.5 text-indigo-500"></i> Transferir
+        </button>
+        <button class="btn-open-new-tx px-3.5 py-1.5 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm flex items-center gap-1.5 transition">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i> Lançar
         </button>
       </div>
     </header>
@@ -979,8 +989,159 @@
     </div>
   </div>
 
+  <!-- 8. MODAL: AUTENTICAÇÃO / LOGIN & CADASTRO -->
+  <div id="modal-auth" class="app-modal fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700 animate-fade-in">
+      <div class="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-slate-700/60 pb-3">
+        <h3 id="auth-modal-title" class="text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+          <i data-lucide="cloud" class="w-5 h-5 text-indigo-500"></i> Sincronização em Nuvem
+        </h3>
+        <button onclick="window.App.closeAllModals()" class="text-slate-400 hover:text-slate-600 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Estado Logado -->
+      <div id="auth-logged-in-view" class="hidden space-y-4 text-center py-2">
+        <div class="w-16 h-16 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto text-2xl font-black" id="auth-user-avatar">
+          U
+        </div>
+        <div>
+          <h4 class="font-bold text-slate-900 dark:text-slate-100 text-base" id="auth-user-name">Usuário Conectado</h4>
+          <p class="text-xs text-slate-500" id="auth-user-email">usuario@email.com</p>
+        </div>
+        <div class="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-2xl text-xs text-emerald-800 dark:text-emerald-300 font-semibold flex items-center justify-center gap-2">
+          <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i> Sincronização em tempo real ativa no iPhone e PC
+        </div>
+        <div class="pt-2 flex justify-center gap-2">
+          <button onclick="window.App.handleLogout()" class="px-5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:hover:bg-rose-900 dark:text-rose-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+            <i data-lucide="log-out" class="w-4 h-4"></i> Desconectar da Conta
+          </button>
+        </div>
+      </div>
+
+      <!-- Estado Deslogado: Abas Entrar / Cadastrar -->
+      <div id="auth-logged-out-view">
+        <!-- Alternador de Abas -->
+        <div class="flex border-b border-slate-200 dark:border-slate-700 mb-4">
+          <button id="tab-auth-login" onclick="window.App.switchAuthTab('login')" class="flex-1 py-2 text-xs font-bold border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400 transition">
+            Entrar na Conta
+          </button>
+          <button id="tab-auth-register" onclick="window.App.switchAuthTab('register')" class="flex-1 py-2 text-xs font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition">
+            Criar Nova Conta
+          </button>
+        </div>
+
+        <!-- Botão Google -->
+        <button type="button" onclick="window.App.handleGoogleLogin()" class="w-full py-2.5 px-4 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center justify-center gap-2.5 shadow-sm transition mb-4">
+          <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+          Continuar com o Google
+        </button>
+
+        <div class="flex items-center gap-3 my-3">
+          <div class="h-px bg-slate-200 dark:bg-slate-700 flex-1"></div>
+          <span class="text-[11px] font-bold text-slate-400 uppercase">ou com e-mail</span>
+          <div class="h-px bg-slate-200 dark:bg-slate-700 flex-1"></div>
+        </div>
+
+        <!-- Form de Autenticação -->
+        <form id="form-auth" class="space-y-3">
+          <div id="auth-name-group" class="hidden">
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Seu Nome</label>
+            <input type="text" id="auth-name" placeholder="Ex: João Silva" class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">E-mail</label>
+            <input type="email" id="auth-email" placeholder="seu@email.com" required class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm">
+          </div>
+
+          <div>
+            <div class="flex justify-between items-center mb-1">
+              <label class="block text-xs font-bold text-slate-500 uppercase">Senha</label>
+              <button type="button" id="btn-forgot-password" onclick="window.App.handleForgotPassword()" class="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">Esqueci a senha</button>
+            </div>
+            <input type="password" id="auth-password" placeholder="••••••••" required minlength="6" class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm">
+          </div>
+
+          <div id="auth-error-msg" class="hidden p-2.5 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 rounded-xl text-xs text-rose-700 dark:text-rose-300 font-medium"></div>
+
+          <div class="pt-2">
+            <button type="submit" id="btn-auth-submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-500/20 transition">
+              Entrar
+            </button>
+          </div>
+        </form>
+
+        <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700/60 text-center">
+          <button type="button" onclick="window.App.openFirebaseConfigModal()" class="text-xs text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition flex items-center justify-center gap-1 mx-auto">
+            <i data-lucide="settings" class="w-3.5 h-3.5"></i> Configurar Chaves do Firebase
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9. MODAL: CONFIGURAÇÃO DO FIREBASE (NUVEM) -->
+  <div id="modal-firebase-config" class="app-modal fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700 max-h-[90vh] overflow-y-auto animate-fade-in">
+      <div class="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-slate-700/60 pb-3">
+        <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+          <i data-lucide="database" class="w-5 h-5 text-indigo-500"></i> Configuração do Firebase
+        </h3>
+        <button onclick="window.App.closeAllModals()" class="text-slate-400 hover:text-slate-600 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-500 mb-4">
+        Cole as credenciais do seu projeto gratuito do <strong>Google Firebase</strong> para habilitar a sincronização em tempo real entre seu iPhone e o computador.
+      </p>
+
+      <form id="form-firebase-config" class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">API Key</label>
+          <input type="text" id="fb-api-key" placeholder="AIzaSy..." required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Auth Domain</label>
+            <input type="text" id="fb-auth-domain" placeholder="seu-app.firebaseapp.com" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Project ID</label>
+            <input type="text" id="fb-project-id" placeholder="financepro-12345" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Storage Bucket</label>
+            <input type="text" id="fb-storage-bucket" placeholder="seu-app.appspot.com" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">App ID</label>
+            <input type="text" id="fb-app-id" placeholder="1:123456:web:abcd..." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono">
+          </div>
+        </div>
+
+        <div class="pt-3 flex justify-end gap-2">
+          <button type="button" onclick="window.App.closeAllModals()" class="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition">Cancelar</button>
+          <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition">Salvar & Conectar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- CONTAINER DE TOASTS -->
   <div id="toast-container"></div>
+
+  <!-- GOOGLE FIREBASE SDK (COMPAT) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-sync.js"></script>
 
   <!-- SCRIPTS DA APLICAÇÃO -->
   <script src="js/state.js"></script>

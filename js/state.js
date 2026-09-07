@@ -237,8 +237,34 @@ class StateManager {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
       this.notifySubscribers();
+
+      // Sincronizar com a nuvem (Firebase Firestore)
+      if (window.FirebaseSync && typeof window.FirebaseSync.saveToCloud === 'function') {
+        window.FirebaseSync.saveToCloud(data);
+      }
     } catch (e) {
       console.error('Erro ao salvar no localStorage:', e);
+    }
+  }
+
+  loadFromCloud(cloudData) {
+    if (!cloudData) return;
+    try {
+      this.data = {
+        categories: cloudData.categories || this.data.categories || DEFAULT_CATEGORIES,
+        accounts: cloudData.accounts || this.data.accounts || DEFAULT_ACCOUNTS,
+        goals: cloudData.goals || this.data.goals || DEFAULT_GOALS,
+        transactions: cloudData.transactions || this.data.transactions || [],
+        settings: this.data.settings || {
+          theme: 'light',
+          currency: 'BRL',
+          selectedMonth: new Date().toISOString().slice(0, 7)
+        }
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+      this.notifySubscribers();
+    } catch (e) {
+      console.error('Erro ao carregar dados da nuvem:', e);
     }
   }
 

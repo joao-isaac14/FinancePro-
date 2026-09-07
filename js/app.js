@@ -9,9 +9,11 @@ class AppController {
   }
 
   init() {
+    this.authMode = 'login';
     this.applyTheme(window.State.getSettings().theme);
     this.bindGlobalEvents();
     this.setupMonthSelector();
+    this.setupFirebaseSyncListeners();
     this.renderCurrentView();
 
     // Reagir a qualquer alteração de estado
@@ -1014,6 +1016,71 @@ class AppController {
     if (fileInput) {
       fileInput.addEventListener('change', (e) => this.handleFileImport(e));
     }
+
+    // Form de Autenticação (Login / Cadastro)
+    const formAuth = document.getElementById('form-auth');
+    if (formAuth) {
+      formAuth.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const errBox = document.getElementById('auth-error-msg');
+        if (errBox) {
+          errBox.classList.add('hidden');
+          errBox.textContent = '';
+        }
+
+        const email = document.getElementById('auth-email').value;
+        const password = document.getElementById('auth-password').value;
+        const name = document.getElementById('auth-name')?.value || '';
+
+        const submitBtn = document.getElementById('btn-auth-submit');
+        const originalText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Processando...';
+
+        try {
+          if (this.authMode === 'register') {
+            await window.FirebaseSync.registerWithEmail(email, password, name);
+            this.showToast('Conta criada com sucesso! Sincronização em nuvem ativada.', 'success');
+          } else {
+            await window.FirebaseSync.loginWithEmail(email, password);
+            this.showToast('Login realizado com sucesso! Seus dados foram sincronizados.', 'success');
+          }
+          this.closeAllModals();
+          formAuth.reset();
+        } catch (err) {
+          if (errBox) {
+            errBox.textContent = this.translateFirebaseError(err.message || err.code);
+            errBox.classList.remove('hidden');
+          }
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalText;
+        }
+      });
+    }
+
+    // Form de Configuração do Firebase
+    const formFb = document.getElementById('form-firebase-config');
+    if (formFb) {
+      formFb.addEventListener('submit', (e) => {
+        e.preventDefault();
+        try {
+          const config = {
+            apiKey: document.getElementById('fb-api-key').value.trim(),
+            authDomain: document.getElementById('fb-auth-domain').value.trim(),
+            projectId: document.getElementById('fb-project-id').value.trim(),
+            storageBucket: document.getElementById('fb-storage-bucket')?.value.trim() || '',
+            appId: document.getElementById('fb-app-id')?.value.trim() || ''
+          };
+
+          window.FirebaseSync.saveFirebaseConfig(config);
+          this.closeAllModals();
+          this.showToast('Configurações da Nuvem salvas e conectadas!', 'success');
+        } catch (err) {
+          alert('Erro ao salvar configuração: ' + err.message);
+        }
+      });
+    }
   }
 
   // --- Modal Helpers & Edição de Transações ---
@@ -1471,6 +1538,189 @@ class AppController {
       }
     };
     reader.readAsText(file, 'UTF-8');
+  }
+
+  // --- Autenticação & Nuvem Firebase ---
+  setupFirebaseSyncListeners() {
+    if (!window.FirebaseSync) return;
+
+    window.FirebaseSync.onAuthChange((user) => {
+      const userLabel = document.getElementById('auth-user-label');
+      const authBtn = document.getElementById('btn-auth-profile');
+
+      if (user) {
+        const displayName = user.displayName || user.email.split('@')[0];
+        if (userLabel) userLabel.textContent = displayName;
+        if (authBtn) {
+          authBtn.classList.remove('bg-indigo-50', 'text-indigo-700');
+          authBtn.classList.add('bg-emerald-50', 'text-emerald-700', 'dark:bg-emerald-950/60', 'dark:text-emerald-300');
+        }
+      } else {
+        if (userLabel) userLabel.textContent = 'Entrar / Cadastrar';
+        if (authBtn) {
+          authBtn.classList.add('bg-indigo-50', 'text-indigo-700');
+          authBtn.classList.remove('bg-emerald-50', 'text-emerald-700', 'dark:bg-emerald-950/60', 'dark:text-emerald-300');
+        }
+      }
+    });
+
+    window.FirebaseSync.onSyncStatusChange((status, message) => {
+      const dot = document.getElementById('sync-dot');
+      const text = document.getElementById('sync-text');
+
+      if (dot && text) {
+        text.textContent = message;
+        dot.className = 'w-2 h-2 rounded-full';
+
+        if (status === 'synced') {
+          dot.classList.add('bg-emerald-500');
+        } else if (status === 'syncing') {
+          dot.classList.add('bg-amber-500', 'animate-pulse');
+        } else if (status === 'unconfigured') {
+          dot.classList.add('bg-slate-400');
+        } else {
+          dot.classList.add('bg-rose-500');
+        }
+      }
+    });
+  }
+
+  openAuthModal() {
+    const modal = document.getElementById('modal-auth');
+    if (!modal) return;
+
+    const user = window.FirebaseSync?.currentUser;
+    const loggedInView = document.getElementById('auth-logged-in-view');
+    const loggedOutView = document.getElementById('auth-logged-out-view');
+
+    if (user) {
+      if (loggedInView) loggedInView.classList.remove('hidden');
+      if (loggedOutView) loggedOutView.classList.add('hidden');
+
+      const nameEl = document.getElementById('auth-user-name');
+      const emailEl = document.getElementById('auth-user-email');
+      const avatarEl = document.getElementById('auth-user-avatar');
+
+      const name = user.displayName || user.email.split('@')[0];
+      if (nameEl) nameEl.textContent = name;
+      if (emailEl) emailEl.textContent = user.email || '';
+      if (avatarEl) avatarEl.textContent = name.charAt(0).toUpperCase();
+    } else {
+      if (loggedInView) loggedInView.classList.add('hidden');
+      if (loggedOutView) loggedOutView.classList.remove('hidden');
+      this.switchAuthTab('login');
+    }
+
+    modal.classList.remove('hidden');
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  switchAuthTab(mode) {
+    this.authMode = mode;
+    const tabLogin = document.getElementById('tab-auth-login');
+    const tabRegister = document.getElementById('tab-auth-register');
+    const nameGroup = document.getElementById('auth-name-group');
+    const forgotBtn = document.getElementById('btn-forgot-password');
+    const submitBtn = document.getElementById('btn-auth-submit');
+    const errBox = document.getElementById('auth-error-msg');
+
+    if (errBox) errBox.classList.add('hidden');
+
+    if (mode === 'register') {
+      if (tabRegister) tabRegister.className = 'flex-1 py-2 text-xs font-bold border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400 transition';
+      if (tabLogin) tabLogin.className = 'flex-1 py-2 text-xs font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition';
+      if (nameGroup) nameGroup.classList.remove('hidden');
+      if (forgotBtn) forgotBtn.classList.add('hidden');
+      if (submitBtn) submitBtn.textContent = 'Criar Minha Conta';
+    } else {
+      if (tabLogin) tabLogin.className = 'flex-1 py-2 text-xs font-bold border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400 transition';
+      if (tabRegister) tabRegister.className = 'flex-1 py-2 text-xs font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition';
+      if (nameGroup) nameGroup.classList.add('hidden');
+      if (forgotBtn) forgotBtn.classList.remove('hidden');
+      if (submitBtn) submitBtn.textContent = 'Entrar';
+    }
+  }
+
+  async handleGoogleLogin() {
+    try {
+      await window.FirebaseSync.loginWithGoogle();
+      this.showToast('Login com Google realizado com sucesso!', 'success');
+      this.closeAllModals();
+    } catch (err) {
+      const errBox = document.getElementById('auth-error-msg');
+      if (errBox) {
+        errBox.textContent = this.translateFirebaseError(err.message || err.code);
+        errBox.classList.remove('hidden');
+      }
+    }
+  }
+
+  async handleLogout() {
+    try {
+      await window.FirebaseSync.logout();
+      this.showToast('Você desconectou da sua conta.', 'info');
+      this.closeAllModals();
+    } catch (err) {
+      alert('Erro ao desconectar: ' + err.message);
+    }
+  }
+
+  async handleForgotPassword() {
+    const email = document.getElementById('auth-email').value;
+    if (!email) {
+      alert('Por favor, digite seu e-mail no campo acima para redefinir sua senha.');
+      return;
+    }
+    try {
+      await window.FirebaseSync.sendPasswordReset(email);
+      this.showToast(`E-mail de redefinição de senha enviado para ${email}!`, 'info');
+    } catch (err) {
+      alert('Erro ao enviar e-mail: ' + this.translateFirebaseError(err.message || err.code));
+    }
+  }
+
+  openFirebaseConfigModal() {
+    const modal = document.getElementById('modal-firebase-config');
+    if (!modal) return;
+
+    const config = window.FirebaseSync?.getFirebaseConfig();
+    if (config) {
+      document.getElementById('fb-api-key').value = config.apiKey || '';
+      document.getElementById('fb-auth-domain').value = config.authDomain || '';
+      document.getElementById('fb-project-id').value = config.projectId || '';
+      document.getElementById('fb-storage-bucket').value = config.storageBucket || '';
+      document.getElementById('fb-app-id').value = config.appId || '';
+    }
+
+    modal.classList.remove('hidden');
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  translateFirebaseError(msg) {
+    if (!msg) return 'Ocorreu um erro. Tente novamente.';
+    const str = String(msg).toLowerCase();
+    if (str.includes('user-not-found') || str.includes('invalid-credential') || str.includes('wrong-password') || str.includes('invalid-login-credentials')) {
+      return 'E-mail ou senha incorretos.';
+    }
+    if (str.includes('email-already-in-use')) {
+      return 'Este e-mail já está cadastrado. Selecione a aba "Entrar".';
+    }
+    if (str.includes('weak-password')) {
+      return 'A senha deve ter no mínimo 6 caracteres.';
+    }
+    if (str.includes('invalid-email')) {
+      return 'Formato de e-mail inválido.';
+    }
+    if (str.includes('popup-closed-by-user')) {
+      return 'A janela de autenticação foi fechada antes da conclusão.';
+    }
+    if (str.includes('unauthorized-domain')) {
+      return 'Domínio não autorizado. Adicione seu domínio no painel do Firebase.';
+    }
+    if (str.includes('não configurado')) {
+      return 'Configuração da Nuvem necessária. Clique em "Configurar Chaves do Firebase" abaixo.';
+    }
+    return msg;
   }
 }
 
