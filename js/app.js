@@ -129,7 +129,7 @@ class AppController {
   switchTab(tabId) {
     this.currentTab = tabId;
 
-    // Atualizar classes dos links de navegação
+    // Atualizar classes dos links de navegação (Desktop)
     document.querySelectorAll('[data-nav-tab]').forEach(btn => {
       const active = btn.getAttribute('data-nav-tab') === tabId;
       if (active) {
@@ -138,6 +138,27 @@ class AppController {
       } else {
         btn.classList.remove('bg-indigo-50', 'text-indigo-600', 'dark:bg-indigo-950/50', 'dark:text-indigo-400', 'font-semibold');
         btn.classList.add('text-slate-600', 'dark:text-slate-400', 'hover:bg-slate-100', 'dark:hover:bg-slate-800');
+      }
+    });
+
+    // Atualizar classes dos links de navegação (Mobile Bottom Bar)
+    document.querySelectorAll('[data-mobile-nav-tab]').forEach(btn => {
+      const active = btn.getAttribute('data-mobile-nav-tab') === tabId;
+      const span = btn.querySelector('span');
+      if (active) {
+        btn.classList.add('text-indigo-600', 'dark:text-indigo-400');
+        btn.classList.remove('text-slate-500', 'dark:text-slate-400');
+        if (span) {
+          span.classList.remove('font-medium');
+          span.classList.add('font-bold');
+        }
+      } else {
+        btn.classList.remove('text-indigo-600', 'dark:text-indigo-400');
+        btn.classList.add('text-slate-500', 'dark:text-slate-400');
+        if (span) {
+          span.classList.remove('font-bold');
+          span.classList.add('font-medium');
+        }
       }
     });
 
@@ -332,6 +353,7 @@ class AppController {
     const categories = window.State.getCategories();
     const accounts = window.State.getAccounts();
     const tbody = document.getElementById('transactions-table-body');
+    const mobileCardsContainer = document.getElementById('transactions-mobile-cards');
     const countEl = document.getElementById('tx-count-badge');
 
     if (countEl) countEl.textContent = `${transactions.length} lançamento(s)`;
@@ -339,61 +361,127 @@ class AppController {
     // Preencher selects de filtros se ainda não foram
     this.populateFilterDropdowns();
 
-    if (!tbody) return;
-
     if (transactions.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-slate-500">Nenhum lançamento encontrado para os filtros selecionados.</td></tr>`;
+      if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-slate-500">Nenhum lançamento encontrado para os filtros selecionados.</td></tr>`;
+      if (mobileCardsContainer) {
+        mobileCardsContainer.innerHTML = `
+          <div class="text-center py-12 px-4 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm">
+            <div class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center mx-auto mb-3 text-slate-400">
+              <i data-lucide="inbox" class="w-6 h-6"></i>
+            </div>
+            <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">Nenhum lançamento encontrado</p>
+            <p class="text-xs text-slate-400 mt-1">Tente ajustar os filtros ou adicione uma nova movimentação.</p>
+          </div>
+        `;
+      }
       this.updateSelectedTransactionsUI();
       return;
     }
 
-    tbody.innerHTML = transactions.map(tx => {
-      const cat = categories.find(c => c.id === tx.categoryId);
-      const acc = accounts.find(a => a.id === tx.accountId);
-      const isExp = tx.type === 'expense';
+    if (tbody) {
+      tbody.innerHTML = transactions.map(tx => {
+        const cat = categories.find(c => c.id === tx.categoryId);
+        const acc = accounts.find(a => a.id === tx.accountId);
+        const isExp = tx.type === 'expense';
 
-      return `
-        <tr class="border-b border-slate-100 dark:border-slate-800/80 hover:bg-slate-50/70 dark:hover:bg-slate-800/50 transition text-sm">
-          <td class="py-3 px-3 w-10 text-center">
-            <input type="checkbox" class="tx-row-checkbox rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer w-4 h-4" data-id="${tx.id}" onchange="window.App.handleRowCheckboxChange()">
-          </td>
-          <td class="py-3 px-3 text-slate-500 dark:text-slate-400 whitespace-nowrap">${StateManager.formatDateBR(tx.date)}</td>
-          <td class="py-3 px-3">
-            <div class="font-medium text-slate-900 dark:text-slate-100">${tx.description}</div>
-            ${tx.notes ? `<div class="text-xs text-slate-400 italic">${tx.notes}</div>` : ''}
-          </td>
-          <td class="py-3 px-3">
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200">
-              <span class="w-2 h-2 rounded-full" style="background-color: ${cat?.color || '#9CA3AF'}"></span>
-              ${cat?.name || 'Geral'}
-            </span>
-          </td>
-          <td class="py-3 px-3 text-xs text-slate-600 dark:text-slate-400">
-            <span class="flex items-center gap-1">
-              <i data-lucide="${acc?.icon || 'landmark'}" class="w-3.5 h-3.5"></i>
-              ${acc?.name || 'Conta Padrão'}
-            </span>
-          </td>
-          <td class="py-3 px-3 text-right font-bold whitespace-nowrap ${isExp ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}">
-            ${isExp ? '-' : '+'} ${StateManager.formatCurrency(tx.amount)}
-            ${tx.isInstallment ? `<span class="block text-[10px] text-purple-600 dark:text-purple-400 font-normal">Parc. ${tx.installmentCurrent}/${tx.installmentTotal}</span>` : ''}
-          </td>
-          <td class="py-3 px-3 text-center">
-            <button onclick="window.App.toggleStatus('${tx.id}')" title="Alternar status" class="px-2.5 py-1 rounded-full text-xs font-medium transition cursor-pointer ${tx.status === 'paid' ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 hover:bg-amber-200 dark:bg-amber-950/60 dark:text-amber-300'}">
-              ${tx.status === 'paid' ? '✓ Efetivado' : '⏳ Pendente'}
-            </button>
-          </td>
-          <td class="py-3 px-3 text-right whitespace-nowrap">
-            <button onclick="window.App.openTransactionModal('${tx.id}')" class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition mr-1" title="Editar lançamento">
-              <i data-lucide="edit-3" class="w-4 h-4"></i>
-            </button>
-            <button onclick="window.App.deleteTransactionPrompt('${tx.id}')" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition" title="Excluir lançamento">
-              <i data-lucide="trash-2" class="w-4 h-4"></i>
-            </button>
-          </td>
-        </tr>
-      `;
-    }).join('');
+        return `
+          <tr class="border-b border-slate-100 dark:border-slate-800/80 hover:bg-slate-50/70 dark:hover:bg-slate-800/50 transition text-sm">
+            <td class="py-3 px-3 w-10 text-center">
+              <input type="checkbox" class="tx-row-checkbox rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer w-4 h-4" data-id="${tx.id}" onchange="window.App.handleRowCheckboxChange()">
+            </td>
+            <td class="py-3 px-3 text-slate-500 dark:text-slate-400 whitespace-nowrap">${StateManager.formatDateBR(tx.date)}</td>
+            <td class="py-3 px-3">
+              <div class="font-medium text-slate-900 dark:text-slate-100">${tx.description}</div>
+              ${tx.notes ? `<div class="text-xs text-slate-400 italic">${tx.notes}</div>` : ''}
+            </td>
+            <td class="py-3 px-3">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200">
+                <span class="w-2 h-2 rounded-full" style="background-color: ${cat?.color || '#9CA3AF'}"></span>
+                ${cat?.name || 'Geral'}
+              </span>
+            </td>
+            <td class="py-3 px-3 text-xs text-slate-600 dark:text-slate-400">
+              <span class="flex items-center gap-1">
+                <i data-lucide="${acc?.icon || 'landmark'}" class="w-3.5 h-3.5"></i>
+                ${acc?.name || 'Conta Padrão'}
+              </span>
+            </td>
+            <td class="py-3 px-3 text-right font-bold whitespace-nowrap ${isExp ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}">
+              ${isExp ? '-' : '+'} ${StateManager.formatCurrency(tx.amount)}
+              ${tx.isInstallment ? `<span class="block text-[10px] text-purple-600 dark:text-purple-400 font-normal">Parc. ${tx.installmentCurrent}/${tx.installmentTotal}</span>` : ''}
+            </td>
+            <td class="py-3 px-3 text-center">
+              <button onclick="window.App.toggleStatus('${tx.id}')" title="Alternar status" class="px-2.5 py-1 rounded-full text-xs font-medium transition cursor-pointer ${tx.status === 'paid' ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 hover:bg-amber-200 dark:bg-amber-950/60 dark:text-amber-300'}">
+                ${tx.status === 'paid' ? '✓ Efetivado' : '⏳ Pendente'}
+              </button>
+            </td>
+            <td class="py-3 px-3 text-right whitespace-nowrap">
+              <button onclick="window.App.openTransactionModal('${tx.id}')" class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition mr-1" title="Editar lançamento">
+                <i data-lucide="edit-3" class="w-4 h-4"></i>
+              </button>
+              <button onclick="window.App.deleteTransactionPrompt('${tx.id}')" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition" title="Excluir lançamento">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    if (mobileCardsContainer) {
+      mobileCardsContainer.innerHTML = transactions.map(tx => {
+        const cat = categories.find(c => c.id === tx.categoryId);
+        const acc = accounts.find(a => a.id === tx.accountId);
+        const isExp = tx.type === 'expense';
+
+        return `
+          <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm flex flex-col gap-2.5">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${isExp ? 'bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400' : 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400'}">
+                  <i data-lucide="${isExp ? 'arrow-down-right' : 'arrow-up-right'}" class="w-5 h-5"></i>
+                </div>
+                <div class="min-w-0">
+                  <div class="font-bold text-slate-900 dark:text-slate-100 text-sm truncate">${tx.description}</div>
+                  <div class="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+                    <span class="inline-flex items-center gap-1">
+                      <span class="w-1.5 h-1.5 rounded-full" style="background-color: ${cat?.color || '#9CA3AF'}"></span>
+                      ${cat?.name || 'Geral'}
+                    </span>
+                    <span>•</span>
+                    <span>${acc?.name || 'Conta Padrão'}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="text-right shrink-0">
+                <span class="font-extrabold text-sm ${isExp ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}">
+                  ${isExp ? '-' : '+'} ${StateManager.formatCurrency(tx.amount)}
+                </span>
+                ${tx.isInstallment ? `<span class="block text-[10px] text-purple-600 dark:text-purple-400 font-semibold">${tx.installmentCurrent}/${tx.installmentTotal}x</span>` : ''}
+              </div>
+            </div>
+
+            ${tx.notes ? `<p class="text-xs text-slate-400 italic bg-slate-50 dark:bg-slate-900/50 px-2.5 py-1.5 rounded-lg">${tx.notes}</p>` : ''}
+
+            <div class="pt-2 border-t border-slate-100 dark:border-slate-700/60 flex items-center justify-between text-xs">
+              <span class="text-slate-400 text-[11px]">${StateManager.formatDateBR(tx.date)}</span>
+              
+              <div class="flex items-center gap-1.5">
+                <button onclick="window.App.toggleStatus('${tx.id}')" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold transition ${tx.status === 'paid' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'}">
+                  ${tx.status === 'paid' ? '✓ Pago' : '⏳ Pendente'}
+                </button>
+                <button onclick="window.App.openTransactionModal('${tx.id}')" class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition" title="Editar">
+                  <i data-lucide="edit-3" class="w-4 h-4"></i>
+                </button>
+                <button onclick="window.App.deleteTransactionPrompt('${tx.id}')" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition" title="Excluir">
+                  <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
 
     this.updateSelectedTransactionsUI();
   }
@@ -787,6 +875,15 @@ class AppController {
     // Abrir Modal de Nova Transação
     const openTxBtns = document.querySelectorAll('.btn-open-new-tx');
     openTxBtns.forEach(b => b.addEventListener('click', () => this.openTransactionModal()));
+
+    // Fechar modais ao clicar no fundo escuro (backdrop)
+    document.querySelectorAll('.app-modal').forEach(modal => {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          this.closeAllModals();
+        }
+      });
+    });
 
     // Form de Nova / Editar Transação
     const formTx = document.getElementById('form-new-transaction');
@@ -1452,6 +1549,15 @@ class AppController {
       window.State.deleteCategory(catId);
       this.showToast(`Categoria "${cat.name}" excluída!`, 'danger');
       this.openCategoryManagerModal(); // Re-renderiza a lista
+    }
+  }
+
+  openMobileMenuModal() {
+    this.closeAllModals();
+    const modal = document.getElementById('modal-mobile-menu');
+    if (modal) {
+      modal.classList.remove('hidden');
+      if (window.lucide) window.lucide.createIcons();
     }
   }
 

@@ -43,8 +43,8 @@
 </head>
 <body class="h-full bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100 flex flex-col md:flex-row antialiased">
 
-  <!-- ================= SIDEBAR / NAVEGAÇÃO ================= -->
-  <aside class="w-full md:w-64 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col justify-between shrink-0 z-20">
+  <!-- ================= SIDEBAR / NAVEGAÇÃO (DESKTOP) ================= -->
+  <aside class="hidden md:flex md:w-64 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex-col justify-between shrink-0 z-20">
     <div>
       <!-- Logo & Marca -->
       <div class="p-5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/60">
@@ -102,32 +102,52 @@
   </aside>
 
   <!-- ================= CONTEÚDO PRINCIPAL ================= -->
-  <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+  <div class="flex-1 flex flex-col min-w-0 overflow-y-auto pb-28 md:pb-6">
     
-    <!-- BARRA SUPERIOR -->
-    <header class="sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 z-10">
+    <!-- BARRA SUPERIOR (RESPONSIVA) -->
+    <header class="sticky top-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 px-3.5 py-2.5 sm:px-6 sm:py-3.5 flex flex-wrap items-center justify-between gap-2.5 z-10">
+      <!-- Linha superior no celular: Logo, Status Nuvem e Modo Escuro -->
+      <div class="flex items-center justify-between w-full md:hidden pb-1 border-b border-slate-100 dark:border-slate-800">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-indigo-600 to-indigo-400 flex items-center justify-center text-white shadow-sm">
+            <i data-lucide="wallet-cards" class="w-3.5 h-3.5"></i>
+          </div>
+          <span class="font-extrabold text-sm tracking-tight text-slate-900 dark:text-white">FinancePro</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <button onclick="window.App.openAuthModal()" class="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+            <span class="sync-dot-el w-2 h-2 rounded-full bg-slate-400"></span>
+            <span class="sync-text-el text-[11px]">Nuvem</span>
+          </button>
+          <button onclick="window.App.toggleTheme()" class="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Alternar Modo Escuro">
+            <i data-lucide="moon" class="w-3.5 h-3.5 hidden dark:block"></i>
+            <i data-lucide="sun" class="w-3.5 h-3.5 block dark:hidden"></i>
+          </button>
+        </div>
+      </div>
+
       <!-- Seletor de Período / Mês -->
-      <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
-        <button id="btn-prev-month" class="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg text-slate-600 dark:text-slate-300 transition" title="Mês Anterior">
-          <i data-lucide="chevron-left" class="w-4 h-4"></i>
+      <div class="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+        <button id="btn-prev-month" class="p-1 sm:p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg text-slate-600 dark:text-slate-300 transition" title="Mês Anterior">
+          <i data-lucide="chevron-left" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
         </button>
-        <span id="current-month-display" class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 px-2 capitalize">Agosto 2026</span>
+        <span id="current-month-display" class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 px-1.5 sm:px-2 capitalize">Agosto 2026</span>
         <input type="month" id="global-month-picker" class="opacity-0 w-0 h-0 absolute pointer-events-none">
-        <button id="btn-next-month" class="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg text-slate-600 dark:text-slate-300 transition" title="Próximo Mês">
-          <i data-lucide="chevron-right" class="w-4 h-4"></i>
+        <button id="btn-next-month" class="p-1 sm:p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg text-slate-600 dark:text-slate-300 transition" title="Próximo Mês">
+          <i data-lucide="chevron-right" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
         </button>
       </div>
 
-      <!-- Status de Sincronização & Atalhos de Ação Rápida -->
-      <div class="flex items-center flex-wrap gap-2">
+      <!-- Status de Sincronização & Atalhos de Ação Rápida no Desktop (oculto no mobile) -->
+      <div class="hidden md:flex items-center flex-wrap gap-2">
         <button id="btn-sync-status" onclick="window.App.openAuthModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition" title="Status da Sincronização em Nuvem">
-          <span id="sync-dot" class="w-2 h-2 rounded-full bg-slate-400"></span>
-          <span id="sync-text">Conectar Nuvem</span>
+          <span id="sync-dot" class="sync-dot-el w-2 h-2 rounded-full bg-slate-400"></span>
+          <span id="sync-text" class="sync-text-el">Conectar Nuvem</span>
         </button>
 
-        <button id="btn-auth-profile" onclick="window.App.openAuthModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/80 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 transition">
+        <button id="btn-auth-profile" onclick="window.App.openAuthModal()" class="btn-auth-profile-el flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/80 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 transition">
           <i data-lucide="user" class="w-3.5 h-3.5"></i>
-          <span id="auth-user-label">Entrar / Cadastrar</span>
+          <span id="auth-user-label" class="auth-user-label-el">Entrar / Cadastrar</span>
         </button>
 
         <button onclick="window.App.openTransferModal()" class="px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center gap-1.5 transition">
@@ -135,6 +155,16 @@
         </button>
         <button class="btn-open-new-tx px-3.5 py-1.5 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm flex items-center gap-1.5 transition">
           <i data-lucide="plus" class="w-3.5 h-3.5"></i> Lançar
+        </button>
+      </div>
+
+      <!-- No celular: Ações rápidas de transferência e perfil -->
+      <div class="flex md:hidden items-center gap-1.5">
+        <button onclick="window.App.openTransferModal()" class="p-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700" title="Transferência">
+          <i data-lucide="repeat" class="w-4 h-4 text-indigo-500"></i>
+        </button>
+        <button onclick="window.App.openAuthModal()" class="btn-auth-profile-el p-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800" title="Perfil / Conta">
+          <i data-lucide="user" class="w-4 h-4"></i>
         </button>
       </div>
     </header>
@@ -146,48 +176,49 @@
       <section id="view-dashboard" class="view-section space-y-6 animate-fade-in">
         
         <!-- Cards de Indicadores Principais -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Cards de Indicadores Principais (Grade 2x2 no celular, 4 colunas no Desktop) -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <!-- Receitas -->
-          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 flex items-center justify-center">
-              <i data-lucide="arrow-down-left" class="w-6 h-6"></i>
+          <div class="bg-white dark:bg-slate-800 p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-2.5 sm:gap-4">
+            <div class="w-9 h-9 sm:w-12 sm:h-12 rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 flex items-center justify-center shrink-0">
+              <i data-lucide="arrow-down-left" class="w-5 h-5 sm:w-6 sm:h-6"></i>
             </div>
-            <div>
-              <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Receitas do Mês</span>
-              <div id="dash-income" class="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400">R$ 0,00</div>
+            <div class="min-w-0">
+              <span class="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider block truncate">Receitas</span>
+              <div id="dash-income" class="text-base sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 truncate">R$ 0,00</div>
             </div>
           </div>
 
           <!-- Despesas -->
-          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400 flex items-center justify-center">
-              <i data-lucide="arrow-up-right" class="w-6 h-6"></i>
+          <div class="bg-white dark:bg-slate-800 p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-2.5 sm:gap-4">
+            <div class="w-9 h-9 sm:w-12 sm:h-12 rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400 flex items-center justify-center shrink-0">
+              <i data-lucide="arrow-up-right" class="w-5 h-5 sm:w-6 sm:h-6"></i>
             </div>
-            <div>
-              <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Despesas do Mês</span>
-              <div id="dash-expense" class="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400">R$ 0,00</div>
+            <div class="min-w-0">
+              <span class="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider block truncate">Despesas</span>
+              <div id="dash-expense" class="text-base sm:text-2xl font-black text-rose-600 dark:text-rose-400 truncate">R$ 0,00</div>
             </div>
           </div>
 
           <!-- Saldo / Balanço -->
-          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400 flex items-center justify-center">
-              <i data-lucide="scale" class="w-6 h-6"></i>
+          <div class="bg-white dark:bg-slate-800 p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-2.5 sm:gap-4">
+            <div class="w-9 h-9 sm:w-12 sm:h-12 rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400 flex items-center justify-center shrink-0">
+              <i data-lucide="scale" class="w-5 h-5 sm:w-6 sm:h-6"></i>
             </div>
-            <div>
-              <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Balanço do Mês</span>
-              <div id="dash-balance" class="text-xl sm:text-2xl font-black">R$ 0,00</div>
+            <div class="min-w-0">
+              <span class="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider block truncate">Balanço</span>
+              <div id="dash-balance" class="text-base sm:text-2xl font-black truncate">R$ 0,00</div>
             </div>
           </div>
 
           <!-- Taxa de Economia -->
-          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400 flex items-center justify-center">
-              <i data-lucide="percent" class="w-6 h-6"></i>
+          <div class="bg-white dark:bg-slate-800 p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-2.5 sm:gap-4">
+            <div class="w-9 h-9 sm:w-12 sm:h-12 rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400 flex items-center justify-center shrink-0">
+              <i data-lucide="percent" class="w-5 h-5 sm:w-6 sm:h-6"></i>
             </div>
-            <div>
-              <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Taxa de Poupança</span>
-              <div id="dash-savings-rate" class="text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-400">0%</div>
+            <div class="min-w-0">
+              <span class="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider block truncate">Poupança</span>
+              <div id="dash-savings-rate" class="text-base sm:text-2xl font-black text-amber-600 dark:text-amber-400 truncate">0%</div>
             </div>
           </div>
         </div>
@@ -326,8 +357,8 @@
           </div>
         </div>
 
-        <!-- Tabela Completa de Transações -->
-        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm overflow-hidden">
+        <!-- Tabela Completa de Transações (Desktop) -->
+        <div class="hidden md:block bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm overflow-hidden">
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
               <thead>
@@ -349,6 +380,11 @@
               </tbody>
             </table>
           </div>
+        </div>
+
+        <!-- Lista de Cartões Verticais (Mobile / iPhone 12) -->
+        <div id="transactions-mobile-cards" class="md:hidden space-y-2.5">
+          <!-- Injetado dinamicamente no mobile -->
         </div>
       </section>
 
@@ -624,7 +660,111 @@
     </main>
   </div>
 
+  <!-- ================= BARRA DE NAVEGAÇÃO INFERIOR (MOBILE BOTTOM BAR) ================= -->
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 px-3 py-2 flex items-center justify-around pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
+    <button onclick="window.App.switchTab('dashboard')" data-mobile-nav-tab="dashboard" class="flex flex-col items-center justify-center gap-1 text-indigo-600 dark:text-indigo-400 min-w-[56px] py-1 transition active:scale-95">
+      <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+      <span class="text-[10px] font-bold">Início</span>
+    </button>
+    <button onclick="window.App.switchTab('transactions')" data-mobile-nav-tab="transactions" class="flex flex-col items-center justify-center gap-1 text-slate-500 dark:text-slate-400 min-w-[56px] py-1 transition active:scale-95">
+      <i data-lucide="arrow-left-right" class="w-5 h-5"></i>
+      <span class="text-[10px] font-medium">Extrato</span>
+    </button>
+
+    <!-- Botão Central de Adicionar Lançamento com Destaque -->
+    <div class="relative -top-4 flex items-center justify-center">
+      <button class="btn-open-new-tx w-13 h-13 p-3.5 bg-gradient-to-tr from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 text-white rounded-full shadow-lg shadow-indigo-500/40 flex items-center justify-center active:scale-90 transition-transform" title="Novo Lançamento">
+        <i data-lucide="plus" class="w-6 h-6 stroke-[2.5]"></i>
+      </button>
+    </div>
+
+    <button onclick="window.App.switchTab('goals')" data-mobile-nav-tab="goals" class="flex flex-col items-center justify-center gap-1 text-slate-500 dark:text-slate-400 min-w-[56px] py-1 transition active:scale-95">
+      <i data-lucide="piggy-bank" class="w-5 h-5"></i>
+      <span class="text-[10px] font-medium">Metas</span>
+    </button>
+    <button onclick="window.App.openMobileMenuModal()" data-mobile-nav-tab="more" class="flex flex-col items-center justify-center gap-1 text-slate-500 dark:text-slate-400 min-w-[56px] py-1 transition active:scale-95">
+      <i data-lucide="menu" class="w-5 h-5"></i>
+      <span class="text-[10px] font-medium">Mais</span>
+    </button>
+  </nav>
+
   <!-- ================= MODAIS DA APLICAÇÃO ================= -->
+
+  <!-- MODAL: MENU DE MAIS OPÇÕES (MOBILE) -->
+  <div id="modal-mobile-menu" class="app-modal fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl max-w-md w-full p-5 shadow-2xl border border-slate-200 dark:border-slate-800 max-h-[85vh] overflow-y-auto animate-fade-in">
+      <div class="w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-3 sm:hidden"></div>
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 mb-4">
+        <h3 class="font-bold text-base text-slate-900 dark:text-slate-100 flex items-center gap-2">
+          <i data-lucide="grid" class="w-5 h-5 text-indigo-500"></i> Todas as Ferramentas
+        </h3>
+        <button onclick="window.App.closeAllModals()" class="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <button onclick="window.App.switchTab('budgets'); window.App.closeAllModals();" class="flex flex-col items-start p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 active:scale-95 transition text-left">
+          <div class="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-2">
+            <i data-lucide="target" class="w-5 h-5"></i>
+          </div>
+          <span class="text-xs font-bold text-slate-900 dark:text-slate-100">Tetos de Gastos</span>
+          <span class="text-[10px] text-slate-400">Limites por categoria</span>
+        </button>
+
+        <button onclick="window.App.switchTab('accounts'); window.App.closeAllModals();" class="flex flex-col items-start p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 active:scale-95 transition text-left">
+          <div class="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-2">
+            <i data-lucide="landmark" class="w-5 h-5"></i>
+          </div>
+          <span class="text-xs font-bold text-slate-900 dark:text-slate-100">Contas & Cartões</span>
+          <span class="text-[10px] text-slate-400">Saldos e faturas</span>
+        </button>
+
+        <button onclick="window.App.switchTab('reports'); window.App.closeAllModals();" class="flex flex-col items-start p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 active:scale-95 transition text-left">
+          <div class="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-2">
+            <i data-lucide="pie-chart" class="w-5 h-5"></i>
+          </div>
+          <span class="text-xs font-bold text-slate-900 dark:text-slate-100">Relatórios</span>
+          <span class="text-[10px] text-slate-400">Gráficos e evolução</span>
+        </button>
+
+        <button onclick="window.App.switchTab('calendar'); window.App.closeAllModals();" class="flex flex-col items-start p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 active:scale-95 transition text-left">
+          <div class="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-2">
+            <i data-lucide="calendar" class="w-5 h-5"></i>
+          </div>
+          <span class="text-xs font-bold text-slate-900 dark:text-slate-100">Calendário</span>
+          <span class="text-[10px] text-slate-400">Vencimentos do mês</span>
+        </button>
+
+        <button onclick="window.App.switchTab('importer'); window.App.closeAllModals();" class="flex flex-col items-start p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 active:scale-95 transition text-left">
+          <div class="w-9 h-9 rounded-xl bg-cyan-100 dark:bg-cyan-900/40 text-cyan-600 dark:text-cyan-400 flex items-center justify-center mb-2">
+            <i data-lucide="file-up" class="w-5 h-5"></i>
+          </div>
+          <span class="text-xs font-bold text-slate-900 dark:text-slate-100">Backup / CSV</span>
+          <span class="text-[10px] text-slate-400">Exportar & Importar</span>
+        </button>
+
+        <button onclick="window.App.openAuthModal(); window.App.closeAllModals();" class="flex flex-col items-start p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 active:scale-95 transition text-left">
+          <div class="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-2">
+            <i data-lucide="cloud" class="w-5 h-5"></i>
+          </div>
+          <span class="text-xs font-bold text-slate-900 dark:text-slate-100">Sincronização</span>
+          <span class="text-[10px] text-slate-400">Login / Nuvem</span>
+        </button>
+      </div>
+
+      <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-xs">
+        <button onclick="window.App.toggleTheme()" class="flex items-center gap-2 text-slate-600 dark:text-slate-300 font-semibold py-2 px-3 rounded-xl bg-slate-100 dark:bg-slate-800">
+          <i data-lucide="moon" class="w-4 h-4 hidden dark:block"></i>
+          <i data-lucide="sun" class="w-4 h-4 block dark:hidden"></i>
+          <span>Tema</span>
+        </button>
+        <button onclick="window.App.closeAllModals()" class="py-2 px-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl font-bold">
+          Fechar
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- 1. MODAL: NOVO LANÇAMENTO -->
   <div id="modal-transaction" class="app-modal fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">

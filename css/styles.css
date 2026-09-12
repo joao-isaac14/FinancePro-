@@ -122,3 +122,48 @@ body {
     border: 1px solid #e5e7eb !important;
   }
 }
+
+/* --- Mobile First / Otimizações para iPhone 12 --- */
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.animate-slide-up {
+  animation: slideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.pb-safe {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom, 16px));
+}
+
+@media screen and (max-width: 767px) {
+  /* Evitar auto-zoom desagradável no iOS Safari */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+
+  /* Modais em estilo Bottom Sheet no celular */
+  .app-modal {
+    padding: 0 !important;
+    align-items: flex-end !important;
+  }
+
+  .app-modal > div {
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    max-height: 92vh !important;
+    width: 100% !important;
+  }
+
+  /* Notificações de toast acima da barra inferior */
+  #toast-container {
+    bottom: 5.5rem;
+    left: 1rem;
+    right: 1rem;
+  }
+
+  .toast {
+    min-width: unset;
+    width: 100%;
+  }
+}
