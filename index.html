@@ -1153,6 +1153,71 @@
         <div class="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-2xl text-xs text-emerald-800 dark:text-emerald-300 font-semibold flex items-center justify-center gap-2">
           <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i> Sincronização em tempo real ativa no iPhone e PC
         </div>
+
+        <!-- Painel de Compartilhamento de Casal / Família -->
+        <div class="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/60 text-left space-y-3">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+              <i data-lucide="users" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <h5 class="text-xs font-bold text-slate-900 dark:text-slate-100">Cofre de Casal & Família</h5>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400">Sincronize com a conta Google da sua esposa</p>
+            </div>
+          </div>
+
+          <!-- Caso 1: Usuário Dono (Mostra seu código) -->
+          <div id="family-owner-box" class="space-y-2">
+            <span class="text-[11px] font-semibold text-slate-600 dark:text-slate-300 block">
+              Seu Código de Compartilhamento:
+            </span>
+            <div class="flex items-center gap-2">
+              <input type="text" id="family-my-code" readonly class="flex-1 px-3 py-2 bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800 rounded-xl font-mono font-bold text-sm text-indigo-600 dark:text-indigo-400 text-center tracking-wider" value="Carregando...">
+              <button type="button" onclick="window.App.copyFamilyCode()" class="p-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-sm" title="Copiar Código">
+                <i data-lucide="copy" class="w-4 h-4"></i>
+              </button>
+              <button type="button" onclick="window.App.shareFamilyCodeWhatsApp()" class="p-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm" title="Enviar no WhatsApp">
+                <i data-lucide="message-circle" class="w-4 h-4"></i>
+              </button>
+            </div>
+            <p class="text-[11px] text-slate-400 leading-relaxed">
+              👉 Envie este código para a sua esposa. Ela entra no app com o Google dela e digita esse código para os dois compartilharem o mesmo extrato em tempo real.
+            </p>
+
+            <div class="pt-2 border-t border-indigo-100 dark:border-indigo-900/60">
+              <button type="button" onclick="document.getElementById('family-connect-form-box').classList.toggle('hidden')" class="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+                Tem um código de outra pessoa? Clique para conectar &rarr;
+              </button>
+            </div>
+          </div>
+
+          <!-- Formulário para Conectar a Outro Código -->
+          <div id="family-connect-form-box" class="hidden space-y-2 pt-2 border-t border-indigo-100 dark:border-indigo-900/60">
+            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300">Digite o Código da Família:</label>
+            <div class="flex items-center gap-2">
+              <input type="text" id="family-input-code" placeholder="Ex: FP-8K2M" class="flex-1 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono font-bold uppercase tracking-wider">
+              <button type="button" id="btn-family-connect" onclick="window.App.handleConnectFamilyCode()" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition">
+                Conectar
+              </button>
+            </div>
+          </div>
+
+          <!-- Caso 2: Já Conectado ao Cofre de Alguém (ex: Esposa no João) -->
+          <div id="family-linked-box" class="hidden space-y-2.5">
+            <div class="p-2.5 rounded-xl bg-emerald-100/80 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-800 dark:text-emerald-300 flex items-center justify-between">
+              <span class="flex items-center gap-1.5 font-bold">
+                <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600"></i> Conectado ao cofre: <span id="family-linked-code-display" class="font-mono underline">---</span>
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">
+              Todas as receitas e despesas que você lançar serão salvas no cofre compartilhado da família em tempo real.
+            </p>
+            <button type="button" onclick="window.App.handleDisconnectFamily()" class="text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:underline">
+              Desconectar do cofre compartilhado
+            </button>
+          </div>
+        </div>
+
         <div class="pt-2 flex justify-center gap-2">
           <button onclick="window.App.handleLogout()" class="px-5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:hover:bg-rose-900 dark:text-rose-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
             <i data-lucide="log-out" class="w-4 h-4"></i> Desconectar da Conta

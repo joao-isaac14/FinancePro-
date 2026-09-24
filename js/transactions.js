@@ -90,6 +90,8 @@ class TransactionsManager {
         const d = String(targetDate.getDate()).padStart(2, '0');
         const formattedDate = `${y}-${m}-${d}`;
 
+        const authorName = window.FirebaseSync?.getCurrentUserLabel() || '';
+
         generatedList.push({
           id: `tx_${Date.now()}_inst_${i}`,
           description: `${description} (${i}/${count})`,
@@ -103,7 +105,8 @@ class TransactionsManager {
           installmentCurrent: i,
           installmentTotal: count,
           installmentParentId: groupId,
-          notes: notes
+          notes: notes,
+          createdBy: authorName
         });
       }
 
@@ -112,6 +115,7 @@ class TransactionsManager {
     }
 
     // Caso 2: Lançamento Único ou Recorrente
+    const authorName = window.FirebaseSync?.getCurrentUserLabel() || '';
     const singleTx = {
       description,
       amount: baseAmount,
@@ -122,7 +126,8 @@ class TransactionsManager {
       status,
       isRecurring,
       recurringFrequency: isRecurring ? recurringFrequency : null,
-      notes
+      notes,
+      createdBy: authorName
     };
 
     return window.State.addTransaction(singleTx);

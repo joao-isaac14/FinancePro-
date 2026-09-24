@@ -19,6 +19,12 @@ class FirebaseSyncManager {
     this.isLocalSaving = false;
     this.syncListeners = [];
     this.authListeners = [];
+    this.familyListeners = [];
+
+    // Cofre compartilhado / Família
+    this.myFamilyCode = null;
+    this.linkedSyncId = localStorage.getItem('finance_pro_family_sync_id') || null;
+    this.linkedCode = localStorage.getItem('finance_pro_family_code_display') || null;
 
     // Chave de armazenamento da configuração personalizada
     this.CONFIG_STORAGE_KEY = 'finance_pro_firebase_config';
@@ -45,6 +51,15 @@ class FirebaseSyncManager {
     }
     localStorage.setItem(this.CONFIG_STORAGE_KEY, JSON.stringify(config));
     this.init();
+  }
+
+  generateFamilyCode() {
+    const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+    let code = 'FP-';
+    for (let i = 0; i < 5; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
   }
 
   init() {
@@ -78,19 +93,23 @@ class FirebaseSyncManager {
       }
 
       // Escutar mudanças no estado de autenticação
-      this.auth.onAuthStateChanged(user => {
+      this.auth.onAuthStateChanged(async user => {
         this.currentUser = user;
         this.notifyAuthListeners(user);
 
         if (user) {
           this.updateSyncStatus('syncing', 'Sincronizando dados...');
-          this.startRealtimeListener(user.uid);
+          await this.loadUserProfile(user);
+          const activeSyncId = this.getActiveSyncId();
+          this.startRealtimeListener(activeSyncId);
         } else {
           if (this.unsubscribeFirestore) {
             this.unsubscribeFirestore();
             this.unsubscribeFirestore = null;
           }
+          this.myFamilyCode = null;
           this.updateSyncStatus('offline', 'Desconectado');
+          this.notifyFamilyListeners();
         }
       });
 
@@ -98,6 +117,150 @@ class FirebaseSyncManager {
       console.error('Erro ao inicializar Firebase:', err);
       this.updateSyncStatus('error', 'Erro na conexão com Firebase');
     }
+  }
+
+  // --- Perfil e Cofre de Família ---
+  async loadUserProfile(user) {
+    if (!this.db || !user) return;
+
+    try {
+      // 1. Verificar se o usuário já possui vínculo com cofre compartilhado no Firestore
+      const profileDoc = await this.db.collection('finance_user_profiles').doc(user.uid).get();
+      if (profileDoc.exists) {
+        const data = profileDoc.data();
+        if (data.linkedSyncId) {
+          this.linkedSyncId = data.linkedSyncId;
+          this.linkedCode = data.linkedCode || '';
+          localStorage.setItem('finance_pro_family_sync_id', this.linkedSyncId);
+          localStorage.setItem('finance_pro_family_code_display', this.linkedCode);
+        }
+      }
+
+      // 2. Garantir que este usuário possua seu próprio código de família gerado
+      const userDoc = await this.db.collection('finance_users').doc(user.uid).get();
+      if (userDoc.exists && userDoc.data()?.familyCode) {
+        this.myFamilyCode = userDoc.data().familyCode;
+      } else {
+        const newCode = this.generateFamilyCode();
+        this.myFamilyCode = newCode;
+        // Salva mapeamento público do código para o UID do usuário
+        await this.db.collection('finance_family_shares').doc(newCode).set({
+          targetUid: user.uid,
+          ownerEmail: user.email || '',
+          ownerName: user.displayName || '',
+          createdAt: new Date().toISOString()
+        }, { merge: true });
+        // Registra o código no documento do usuário
+        await this.db.collection('finance_users').doc(user.uid).set({
+          familyCode: newCode
+        }, { merge: true });
+      }
+
+      this.notifyFamilyListeners();
+    } catch (err) {
+      console.warn('Aviso ao carregar perfil de família:', err);
+    }
+  }
+
+  getActiveSyncId() {
+    const linked = localStorage.getItem('finance_pro_family_sync_id') || this.linkedSyncId;
+    if (linked) return linked;
+    return this.currentUser ? this.currentUser.uid : null;
+  }
+
+  isLinkedToFamily() {
+    const active = this.getActiveSyncId();
+    return Boolean(active && this.currentUser && active !== this.currentUser.uid);
+  }
+
+  getFamilyCodeDisplay() {
+    if (this.isLinkedToFamily()) {
+      return localStorage.getItem('finance_pro_family_code_display') || this.linkedCode || 'Cofre Compartilhado';
+    }
+    return this.myFamilyCode || '...';
+  }
+
+  getCurrentUserLabel() {
+    if (!this.currentUser) return '';
+    return this.currentUser.displayName || (this.currentUser.email ? this.currentUser.email.split('@')[0] : '');
+  }
+
+  async connectToFamilyCode(code) {
+    if (!this.db || !this.currentUser) throw new Error('Você precisa estar conectado à sua conta.');
+    const cleanCode = (code || '').trim().toUpperCase();
+    if (!cleanCode) throw new Error('Por favor, digite o código da família.');
+
+    let targetUid = null;
+
+    // 1. Buscar no mapeamento de códigos de família
+    try {
+      const shareDoc = await this.db.collection('finance_family_shares').doc(cleanCode).get();
+      if (shareDoc.exists && shareDoc.data()?.targetUid) {
+        targetUid = shareDoc.data().targetUid;
+      }
+    } catch (e) {
+      console.warn('Busca de código em finance_family_shares:', e);
+    }
+
+    // 2. Se não achou, tentar direto como UID
+    if (!targetUid) {
+      try {
+        const userDoc = await this.db.collection('finance_users').doc(cleanCode).get();
+        if (userDoc.exists) {
+          targetUid = cleanCode;
+        }
+      } catch (e) {
+        console.warn('Busca direta por UID:', e);
+      }
+    }
+
+    if (!targetUid) {
+      throw new Error('Código de família não encontrado. Verifique se o código foi digitado corretamente.');
+    }
+
+    if (targetUid === this.currentUser.uid) {
+      throw new Error('Este código pertence à sua própria conta atual.');
+    }
+
+    this.linkedSyncId = targetUid;
+    this.linkedCode = cleanCode;
+    localStorage.setItem('finance_pro_family_sync_id', targetUid);
+    localStorage.setItem('finance_pro_family_code_display', cleanCode);
+
+    // Salvar no perfil para manter a persistência entre dispositivos
+    try {
+      await this.db.collection('finance_user_profiles').doc(this.currentUser.uid).set({
+        linkedSyncId: targetUid,
+        linkedCode: cleanCode,
+        linkedAt: new Date().toISOString()
+      }, { merge: true });
+    } catch (e) {
+      console.warn('Erro ao salvar finance_user_profiles:', e);
+    }
+
+    // Reiniciar o listener em tempo real para o cofre compartilhado
+    this.startRealtimeListener(targetUid);
+    this.notifyFamilyListeners();
+    return { success: true, targetUid, code: cleanCode };
+  }
+
+  async disconnectFromFamily() {
+    if (!this.db || !this.currentUser) return;
+    this.linkedSyncId = null;
+    this.linkedCode = null;
+    localStorage.removeItem('finance_pro_family_sync_id');
+    localStorage.removeItem('finance_pro_family_code_display');
+
+    try {
+      await this.db.collection('finance_user_profiles').doc(this.currentUser.uid).delete();
+    } catch (e) {
+      console.warn('Erro ao limpar finance_user_profiles:', e);
+    }
+
+    // Voltar para o cofre individual do próprio usuário
+    this.startRealtimeListener(this.currentUser.uid);
+    this.notifyFamilyListeners();
+    return { success: true };
   }
 
   // --- Autenticação ---
@@ -128,6 +291,7 @@ class FirebaseSyncManager {
       this.unsubscribeFirestore();
       this.unsubscribeFirestore = null;
     }
+    this.myFamilyCode = null;
     await this.auth.signOut();
   }
 
@@ -137,14 +301,15 @@ class FirebaseSyncManager {
   }
 
   // --- Sincronização em Tempo Real (Firestore) ---
-  startRealtimeListener(uid) {
-    if (!this.db) return;
+  startRealtimeListener(targetId) {
+    if (!this.db || !targetId) return;
 
     if (this.unsubscribeFirestore) {
       this.unsubscribeFirestore();
+      this.unsubscribeFirestore = null;
     }
 
-    const docRef = this.db.collection('finance_users').doc(uid);
+    const docRef = this.db.collection('finance_users').doc(targetId);
 
     this.unsubscribeFirestore = docRef.onSnapshot((docSnapshot) => {
       if (docSnapshot.exists) {
@@ -157,8 +322,8 @@ class FirebaseSyncManager {
           this.updateSyncStatus('synced', 'Sincronizado na Nuvem');
         }
       } else {
-        // Primeiro login: envia os dados locais existentes para o Firestore
-        if (window.State && window.State.data) {
+        // Primeiro login / cofre novo
+        if (targetId === this.currentUser?.uid && window.State && window.State.data) {
           this.saveToCloud(window.State.data);
         }
       }
@@ -170,12 +335,14 @@ class FirebaseSyncManager {
 
   async saveToCloud(data) {
     if (!this.db || !this.currentUser) return;
+    const targetId = this.getActiveSyncId();
+    if (!targetId) return;
 
     try {
       this.isLocalSaving = true;
       this.updateSyncStatus('syncing', 'Salvando na nuvem...');
 
-      const docRef = this.db.collection('finance_users').doc(this.currentUser.uid);
+      const docRef = this.db.collection('finance_users').doc(targetId);
       
       const payload = {
         categories: data.categories || [],
@@ -183,7 +350,7 @@ class FirebaseSyncManager {
         goals: data.goals || [],
         transactions: data.transactions || [],
         lastUpdated: new Date().toISOString(),
-        userEmail: this.currentUser.email || ''
+        lastUpdatedBy: this.getCurrentUserLabel() || this.currentUser.email || 'Membro'
       };
 
       await docRef.set(payload, { merge: true });
@@ -209,6 +376,19 @@ class FirebaseSyncManager {
   notifyAuthListeners(user) {
     this.authListeners.forEach(cb => {
       try { cb(user); } catch (e) { console.error(e); }
+    });
+  }
+
+  onFamilyChange(callback) {
+    this.familyListeners.push(callback);
+    if (this.currentUser) {
+      callback();
+    }
+  }
+
+  notifyFamilyListeners() {
+    this.familyListeners.forEach(cb => {
+      try { cb(); } catch (e) { console.error(e); }
     });
   }
 

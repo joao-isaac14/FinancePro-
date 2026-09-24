@@ -405,6 +405,7 @@ class AppController {
                 <i data-lucide="${acc?.icon || 'landmark'}" class="w-3.5 h-3.5"></i>
                 ${acc?.name || 'Conta Padrão'}
               </span>
+              ${tx.createdBy ? `<span class="inline-flex items-center gap-1 text-[10px] text-slate-400 mt-0.5"><i data-lucide="user" class="w-2.5 h-2.5"></i>${tx.createdBy}</span>` : ''}
             </td>
             <td class="py-3 px-3 text-right font-bold whitespace-nowrap ${isExp ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}">
               ${isExp ? '-' : '+'} ${StateManager.formatCurrency(tx.amount)}
@@ -443,13 +444,14 @@ class AppController {
                 </div>
                 <div class="min-w-0">
                   <div class="font-bold text-slate-900 dark:text-slate-100 text-sm truncate">${tx.description}</div>
-                  <div class="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+                  <div class="flex items-center flex-wrap gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
                     <span class="inline-flex items-center gap-1">
                       <span class="w-1.5 h-1.5 rounded-full" style="background-color: ${cat?.color || '#9CA3AF'}"></span>
                       ${cat?.name || 'Geral'}
                     </span>
                     <span>•</span>
                     <span>${acc?.name || 'Conta Padrão'}</span>
+                    ${tx.createdBy ? `<span class="inline-flex items-center gap-0.5 text-[10px] text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-1.5 py-0.5 rounded font-medium"><i data-lucide="user" class="w-2.5 h-2.5"></i>${tx.createdBy}</span>` : ''}
                   </div>
                 </div>
               </div>
@@ -1689,6 +1691,12 @@ class AppController {
         }
       }
     });
+
+    if (window.FirebaseSync.onFamilyChange) {
+      window.FirebaseSync.onFamilyChange(() => {
+        this.updateFamilySyncUI();
+      });
+    }
   }
 
   openAuthModal() {
@@ -1711,6 +1719,8 @@ class AppController {
       if (nameEl) nameEl.textContent = name;
       if (emailEl) emailEl.textContent = user.email || '';
       if (avatarEl) avatarEl.textContent = name.charAt(0).toUpperCase();
+
+      this.updateFamilySyncUI();
     } else {
       if (loggedInView) loggedInView.classList.add('hidden');
       if (loggedOutView) loggedOutView.classList.remove('hidden');
@@ -1719,6 +1729,96 @@ class AppController {
 
     modal.classList.remove('hidden');
     if (window.lucide) window.lucide.createIcons();
+  }
+
+  // --- Gerenciamento de Cofre de Casal / Família ---
+  updateFamilySyncUI() {
+    if (!window.FirebaseSync) return;
+    const isLinked = window.FirebaseSync.isLinkedToFamily();
+    const myCode = window.FirebaseSync.myFamilyCode || 'Carregando...';
+    const linkedCode = window.FirebaseSync.getFamilyCodeDisplay();
+
+    const ownerBox = document.getElementById('family-owner-box');
+    const linkedBox = document.getElementById('family-linked-box');
+    const myCodeInput = document.getElementById('family-my-code');
+    const linkedCodeEl = document.getElementById('family-linked-code-display');
+
+    if (isLinked) {
+      if (ownerBox) ownerBox.classList.add('hidden');
+      if (linkedBox) linkedBox.classList.remove('hidden');
+      if (linkedCodeEl) linkedCodeEl.textContent = linkedCode;
+    } else {
+      if (ownerBox) ownerBox.classList.remove('hidden');
+      if (linkedBox) linkedBox.classList.add('hidden');
+      if (myCodeInput) myCodeInput.value = myCode;
+    }
+
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  copyFamilyCode() {
+    const input = document.getElementById('family-my-code');
+    if (!input || !input.value || input.value === 'Carregando...') return;
+    const val = input.value;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(val).then(() => {
+        this.showToast('Código da família copiado!', 'success');
+      }).catch(() => {
+        input.select();
+        document.execCommand('copy');
+        this.showToast('Código copiado!', 'success');
+      });
+    } else {
+      input.select();
+      document.execCommand('copy');
+      this.showToast('Código copiado!', 'success');
+    }
+  }
+
+  shareFamilyCodeWhatsApp() {
+    const input = document.getElementById('family-my-code');
+    if (!input || !input.value || input.value === 'Carregando...') return;
+    const code = input.value;
+    const text = encodeURIComponent(`Oi amor! Acesse o nosso aplicativo FinancePro (https://joao-isaac14.github.io/FinancePro-/) com o seu Google e use este código para sincronizar nosso cofre em tempo real: ${code}`);
+    window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+  }
+
+  async handleConnectFamilyCode() {
+    const input = document.getElementById('family-input-code');
+    const btn = document.getElementById('btn-family-connect');
+    if (!input) return;
+    const code = input.value.trim();
+    if (!code) {
+      this.showToast('Por favor, informe o código da família.', 'warning');
+      return;
+    }
+
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Conectando...';
+
+    try {
+      await window.FirebaseSync.connectToFamilyCode(code);
+      this.showToast('Conectado ao cofre da família com sucesso!', 'success');
+      input.value = '';
+      document.getElementById('family-connect-form-box')?.classList.add('hidden');
+      this.updateFamilySyncUI();
+      this.renderCurrentView();
+    } catch (err) {
+      this.showToast(err.message, 'danger');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+  }
+
+  async handleDisconnectFamily() {
+    if (confirm('Deseja realmente desconectar deste cofre compartilhado e voltar ao seu individual?')) {
+      await window.FirebaseSync.disconnectFromFamily();
+      this.showToast('Desconectado do cofre compartilhado.', 'info');
+      this.updateFamilySyncUI();
+      this.renderCurrentView();
+    }
   }
 
   switchAuthTab(mode) {
