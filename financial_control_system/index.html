@@ -7,7 +7,7 @@
 
   <!-- iOS / Apple Web App Settings (PWA) -->
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="FinancePro">
   <meta name="theme-color" content="#4F46E5">
 
@@ -43,8 +43,8 @@
 </head>
 <body class="h-full bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100 flex flex-col md:flex-row antialiased">
 
-  <!-- ================= SIDEBAR / NAVEGAÇÃO ================= -->
-  <aside class="w-full md:w-64 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col justify-between shrink-0 z-20">
+  <!-- ================= SIDEBAR / NAVEGAÇÃO (DESKTOP) ================= -->
+  <aside class="hidden md:flex md:w-64 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex-col justify-between shrink-0 z-20">
     <div>
       <!-- Logo & Marca -->
       <div class="p-5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/60">
@@ -102,29 +102,69 @@
   </aside>
 
   <!-- ================= CONTEÚDO PRINCIPAL ================= -->
-  <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+  <div class="flex-1 flex flex-col min-w-0 overflow-y-auto pb-28 md:pb-6">
     
-    <!-- BARRA SUPERIOR -->
-    <header class="sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 z-10">
-      <!-- Seletor de Período / Mês -->
-      <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
-        <button id="btn-prev-month" class="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg text-slate-600 dark:text-slate-300 transition" title="Mês Anterior">
-          <i data-lucide="chevron-left" class="w-4 h-4"></i>
-        </button>
-        <span id="current-month-display" class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 px-2 capitalize">Agosto 2026</span>
-        <input type="month" id="global-month-picker" class="opacity-0 w-0 h-0 absolute pointer-events-none">
-        <button id="btn-next-month" class="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg text-slate-600 dark:text-slate-300 transition" title="Próximo Mês">
-          <i data-lucide="chevron-right" class="w-4 h-4"></i>
-        </button>
+    <!-- BARRA SUPERIOR (RESPONSIVA) -->
+    <header class="sticky top-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 px-3.5 py-2 sm:px-6 sm:py-3.5 flex flex-wrap items-center justify-between gap-2.5 z-10 pt-safe">
+      <!-- Linha superior no celular: Logo, Status Nuvem e Modo Escuro (Abaixo do Notch/Relógio com pt-safe) -->
+      <div class="flex items-center justify-between w-full md:hidden pb-1.5 border-b border-slate-100 dark:border-slate-800/80">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-indigo-600 to-indigo-400 flex items-center justify-center text-white shadow-sm">
+            <i data-lucide="wallet-cards" class="w-3.5 h-3.5"></i>
+          </div>
+          <span class="font-extrabold text-sm tracking-tight text-slate-900 dark:text-white">FinancePro</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="window.App.openAuthModal()" class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 active:scale-95 transition">
+            <span class="sync-dot-el w-2 h-2 rounded-full bg-slate-400"></span>
+            <span class="sync-text-el text-[11px] font-medium">Nuvem</span>
+          </button>
+          <button onclick="window.App.toggleTheme()" class="p-1.5 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 transition active:scale-95" title="Alternar Modo Escuro">
+            <i data-lucide="moon" class="w-3.5 h-3.5 hidden dark:block"></i>
+            <i data-lucide="sun" class="w-3.5 h-3.5 block dark:hidden"></i>
+          </button>
+        </div>
       </div>
 
-      <!-- Atalhos de Ação Rápida -->
-      <div class="flex items-center gap-3">
-        <button onclick="window.App.openTransferModal()" class="px-3.5 py-2 text-xs sm:text-sm font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center gap-1.5 transition">
-          <i data-lucide="repeat" class="w-4 h-4 text-indigo-500"></i> Transferir
+      <!-- Seletor de Período / Mês e Ação Rápida -->
+      <div class="flex items-center justify-between w-full md:w-auto gap-2">
+        <div class="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 flex-1 md:flex-initial justify-between md:justify-start">
+          <button id="btn-prev-month" class="p-1 sm:p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg text-slate-600 dark:text-slate-300 transition" title="Mês Anterior">
+            <i data-lucide="chevron-left" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+          </button>
+          <span id="current-month-display" class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 px-1.5 sm:px-2 capitalize text-center">Agosto 2026</span>
+          <input type="month" id="global-month-picker" class="opacity-0 w-0 h-0 absolute pointer-events-none">
+          <button id="btn-next-month" class="p-1 sm:p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg text-slate-600 dark:text-slate-300 transition" title="Próximo Mês">
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+          </button>
+        </div>
+
+        <!-- No celular: Ação rápida de transferência ao lado do mês -->
+        <div class="flex md:hidden items-center gap-1.5">
+          <button onclick="window.App.openTransferModal()" class="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold flex items-center gap-1 active:scale-95 transition" title="Transferência">
+            <i data-lucide="repeat" class="w-3.5 h-3.5 text-indigo-500"></i>
+            <span>Transferir</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Status de Sincronização & Atalhos de Ação Rápida no Desktop (oculto no mobile) -->
+      <div class="hidden md:flex items-center flex-wrap gap-2">
+        <button id="btn-sync-status" onclick="window.App.openAuthModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition" title="Status da Sincronização em Nuvem">
+          <span id="sync-dot" class="sync-dot-el w-2 h-2 rounded-full bg-slate-400"></span>
+          <span id="sync-text" class="sync-text-el">Conectar Nuvem</span>
         </button>
-        <button class="btn-open-new-tx px-4 py-2 text-xs sm:text-sm font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm flex items-center gap-1.5 transition">
-          <i data-lucide="plus" class="w-4 h-4"></i> Lançar
+
+        <button id="btn-auth-profile" onclick="window.App.openAuthModal()" class="btn-auth-profile-el flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/80 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 transition">
+          <i data-lucide="user" class="w-3.5 h-3.5"></i>
+          <span id="auth-user-label" class="auth-user-label-el">Entrar / Cadastrar</span>
+        </button>
+
+        <button onclick="window.App.openTransferModal()" class="px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center gap-1.5 transition">
+          <i data-lucide="repeat" class="w-3.5 h-3.5 text-indigo-500"></i> Transferir
+        </button>
+        <button class="btn-open-new-tx px-3.5 py-1.5 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm flex items-center gap-1.5 transition">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i> Lançar
         </button>
       </div>
     </header>
@@ -136,48 +176,49 @@
       <section id="view-dashboard" class="view-section space-y-6 animate-fade-in">
         
         <!-- Cards de Indicadores Principais -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Cards de Indicadores Principais (Grade 2x2 no celular, 4 colunas no Desktop) -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <!-- Receitas -->
-          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 flex items-center justify-center">
-              <i data-lucide="arrow-down-left" class="w-6 h-6"></i>
+          <div class="bg-white dark:bg-slate-800 p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-2.5 sm:gap-4">
+            <div class="w-9 h-9 sm:w-12 sm:h-12 rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 flex items-center justify-center shrink-0">
+              <i data-lucide="arrow-down-left" class="w-5 h-5 sm:w-6 sm:h-6"></i>
             </div>
-            <div>
-              <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Receitas do Mês</span>
-              <div id="dash-income" class="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400">R$ 0,00</div>
+            <div class="min-w-0">
+              <span class="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider block truncate">Receitas</span>
+              <div id="dash-income" class="text-base sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 truncate">R$ 0,00</div>
             </div>
           </div>
 
           <!-- Despesas -->
-          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400 flex items-center justify-center">
-              <i data-lucide="arrow-up-right" class="w-6 h-6"></i>
+          <div class="bg-white dark:bg-slate-800 p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-2.5 sm:gap-4">
+            <div class="w-9 h-9 sm:w-12 sm:h-12 rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400 flex items-center justify-center shrink-0">
+              <i data-lucide="arrow-up-right" class="w-5 h-5 sm:w-6 sm:h-6"></i>
             </div>
-            <div>
-              <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Despesas do Mês</span>
-              <div id="dash-expense" class="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400">R$ 0,00</div>
+            <div class="min-w-0">
+              <span class="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider block truncate">Despesas</span>
+              <div id="dash-expense" class="text-base sm:text-2xl font-black text-rose-600 dark:text-rose-400 truncate">R$ 0,00</div>
             </div>
           </div>
 
           <!-- Saldo / Balanço -->
-          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400 flex items-center justify-center">
-              <i data-lucide="scale" class="w-6 h-6"></i>
+          <div class="bg-white dark:bg-slate-800 p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-2.5 sm:gap-4">
+            <div class="w-9 h-9 sm:w-12 sm:h-12 rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400 flex items-center justify-center shrink-0">
+              <i data-lucide="scale" class="w-5 h-5 sm:w-6 sm:h-6"></i>
             </div>
-            <div>
-              <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Balanço do Mês</span>
-              <div id="dash-balance" class="text-xl sm:text-2xl font-black">R$ 0,00</div>
+            <div class="min-w-0">
+              <span class="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider block truncate">Balanço</span>
+              <div id="dash-balance" class="text-base sm:text-2xl font-black truncate">R$ 0,00</div>
             </div>
           </div>
 
           <!-- Taxa de Economia -->
-          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400 flex items-center justify-center">
-              <i data-lucide="percent" class="w-6 h-6"></i>
+          <div class="bg-white dark:bg-slate-800 p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-2.5 sm:gap-4">
+            <div class="w-9 h-9 sm:w-12 sm:h-12 rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400 flex items-center justify-center shrink-0">
+              <i data-lucide="percent" class="w-5 h-5 sm:w-6 sm:h-6"></i>
             </div>
-            <div>
-              <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Taxa de Poupança</span>
-              <div id="dash-savings-rate" class="text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-400">0%</div>
+            <div class="min-w-0">
+              <span class="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider block truncate">Poupança</span>
+              <div id="dash-savings-rate" class="text-base sm:text-2xl font-black text-amber-600 dark:text-amber-400 truncate">0%</div>
             </div>
           </div>
         </div>
@@ -316,8 +357,8 @@
           </div>
         </div>
 
-        <!-- Tabela Completa de Transações -->
-        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm overflow-hidden">
+        <!-- Tabela Completa de Transações (Desktop) -->
+        <div class="hidden md:block bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm overflow-hidden">
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
               <thead>
@@ -340,6 +381,11 @@
             </table>
           </div>
         </div>
+
+        <!-- Lista de Cartões Verticais (Mobile / iPhone 12) -->
+        <div id="transactions-mobile-cards" class="md:hidden space-y-2.5">
+          <!-- Injetado dinamicamente no mobile -->
+        </div>
       </section>
 
       <!-- ================= 3. VIEW: TETOS DE GASTOS ================= -->
@@ -349,12 +395,15 @@
             <h2 class="text-xl font-black text-slate-900 dark:text-slate-100">Tetos de Gastos & Orçamento Mensal</h2>
             <p class="text-xs sm:text-sm text-slate-500">Defina limites máximos para cada categoria e monitore onde você está economizando ou extrapolando.</p>
           </div>
-          <div class="flex items-center gap-2">
-            <button onclick="window.App.openCategoryManagerModal()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 transition">
-              <i data-lucide="settings-2" class="w-4 h-4 text-indigo-500"></i> Gerenciar Categorias
+          <div class="flex items-center flex-wrap gap-2">
+            <button onclick="window.App.openQuickBudgetsModal()" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-sm transition active:scale-95">
+              <i data-lucide="sliders" class="w-4 h-4"></i> Ajustar Valores dos Tetos
             </button>
-            <button onclick="window.App.openCategoryModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-sm transition">
-              <i data-lucide="plus-circle" class="w-4 h-4"></i> Nova Categoria
+            <button onclick="window.App.openCategoryManagerModal()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 transition">
+              <i data-lucide="settings-2" class="w-4 h-4 text-indigo-500"></i> Categorias
+            </button>
+            <button onclick="window.App.openCategoryModal()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 transition">
+              <i data-lucide="plus-circle" class="w-4 h-4 text-indigo-500"></i> Nova
             </button>
           </div>
         </div>
@@ -597,6 +646,10 @@
               <button onclick="window.State.exportBackupJSON()" class="py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition">
                 <i data-lucide="download" class="w-4 h-4"></i> Baixar Arquivo de Backup (.JSON)
               </button>
+              <label class="py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition cursor-pointer">
+                <i data-lucide="upload" class="w-4 h-4"></i> Restaurar / Carregar Backup (.JSON)
+                <input type="file" id="restore-json-input" accept=".json" class="hidden" onchange="window.App.handleRestoreJSON(event)">
+              </label>
               <button onclick="window.Importer.exportTransactionsToCSV()" class="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition">
                 <i data-lucide="sheet" class="w-4 h-4"></i> Exportar Lançamentos (.CSV / Excel)
               </button>
@@ -610,7 +663,111 @@
     </main>
   </div>
 
+  <!-- ================= BARRA DE NAVEGAÇÃO INFERIOR (MOBILE BOTTOM BAR) ================= -->
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 px-3 py-2 flex items-center justify-around pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
+    <button onclick="window.App.switchTab('dashboard')" data-mobile-nav-tab="dashboard" class="flex flex-col items-center justify-center gap-1 text-indigo-600 dark:text-indigo-400 min-w-[56px] py-1 transition active:scale-95">
+      <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+      <span class="text-[10px] font-bold">Início</span>
+    </button>
+    <button onclick="window.App.switchTab('transactions')" data-mobile-nav-tab="transactions" class="flex flex-col items-center justify-center gap-1 text-slate-500 dark:text-slate-400 min-w-[56px] py-1 transition active:scale-95">
+      <i data-lucide="arrow-left-right" class="w-5 h-5"></i>
+      <span class="text-[10px] font-medium">Extrato</span>
+    </button>
+
+    <!-- Botão Central de Adicionar Lançamento com Destaque -->
+    <div class="relative -top-4 flex items-center justify-center">
+      <button class="btn-open-new-tx w-13 h-13 p-3.5 bg-gradient-to-tr from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 text-white rounded-full shadow-lg shadow-indigo-500/40 flex items-center justify-center active:scale-90 transition-transform" title="Novo Lançamento">
+        <i data-lucide="plus" class="w-6 h-6 stroke-[2.5]"></i>
+      </button>
+    </div>
+
+    <button onclick="window.App.switchTab('goals')" data-mobile-nav-tab="goals" class="flex flex-col items-center justify-center gap-1 text-slate-500 dark:text-slate-400 min-w-[56px] py-1 transition active:scale-95">
+      <i data-lucide="piggy-bank" class="w-5 h-5"></i>
+      <span class="text-[10px] font-medium">Metas</span>
+    </button>
+    <button onclick="window.App.openMobileMenuModal()" data-mobile-nav-tab="more" class="flex flex-col items-center justify-center gap-1 text-slate-500 dark:text-slate-400 min-w-[56px] py-1 transition active:scale-95">
+      <i data-lucide="menu" class="w-5 h-5"></i>
+      <span class="text-[10px] font-medium">Mais</span>
+    </button>
+  </nav>
+
   <!-- ================= MODAIS DA APLICAÇÃO ================= -->
+
+  <!-- MODAL: MENU DE MAIS OPÇÕES (MOBILE) -->
+  <div id="modal-mobile-menu" class="app-modal fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl max-w-md w-full p-5 shadow-2xl border border-slate-200 dark:border-slate-800 max-h-[85vh] overflow-y-auto animate-fade-in">
+      <div class="w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-3 sm:hidden"></div>
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 mb-4">
+        <h3 class="font-bold text-base text-slate-900 dark:text-slate-100 flex items-center gap-2">
+          <i data-lucide="grid" class="w-5 h-5 text-indigo-500"></i> Todas as Ferramentas
+        </h3>
+        <button onclick="window.App.closeAllModals()" class="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <button onclick="window.App.switchTab('budgets'); window.App.closeAllModals();" class="flex flex-col items-start p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 active:scale-95 transition text-left">
+          <div class="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-2">
+            <i data-lucide="target" class="w-5 h-5"></i>
+          </div>
+          <span class="text-xs font-bold text-slate-900 dark:text-slate-100">Tetos de Gastos</span>
+          <span class="text-[10px] text-slate-400">Limites por categoria</span>
+        </button>
+
+        <button onclick="window.App.switchTab('accounts'); window.App.closeAllModals();" class="flex flex-col items-start p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 active:scale-95 transition text-left">
+          <div class="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-2">
+            <i data-lucide="landmark" class="w-5 h-5"></i>
+          </div>
+          <span class="text-xs font-bold text-slate-900 dark:text-slate-100">Contas & Cartões</span>
+          <span class="text-[10px] text-slate-400">Saldos e faturas</span>
+        </button>
+
+        <button onclick="window.App.switchTab('reports'); window.App.closeAllModals();" class="flex flex-col items-start p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 active:scale-95 transition text-left">
+          <div class="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-2">
+            <i data-lucide="pie-chart" class="w-5 h-5"></i>
+          </div>
+          <span class="text-xs font-bold text-slate-900 dark:text-slate-100">Relatórios</span>
+          <span class="text-[10px] text-slate-400">Gráficos e evolução</span>
+        </button>
+
+        <button onclick="window.App.switchTab('calendar'); window.App.closeAllModals();" class="flex flex-col items-start p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 active:scale-95 transition text-left">
+          <div class="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-2">
+            <i data-lucide="calendar" class="w-5 h-5"></i>
+          </div>
+          <span class="text-xs font-bold text-slate-900 dark:text-slate-100">Calendário</span>
+          <span class="text-[10px] text-slate-400">Vencimentos do mês</span>
+        </button>
+
+        <button onclick="window.App.switchTab('importer'); window.App.closeAllModals();" class="flex flex-col items-start p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 active:scale-95 transition text-left">
+          <div class="w-9 h-9 rounded-xl bg-cyan-100 dark:bg-cyan-900/40 text-cyan-600 dark:text-cyan-400 flex items-center justify-center mb-2">
+            <i data-lucide="file-up" class="w-5 h-5"></i>
+          </div>
+          <span class="text-xs font-bold text-slate-900 dark:text-slate-100">Backup / CSV</span>
+          <span class="text-[10px] text-slate-400">Exportar & Importar</span>
+        </button>
+
+        <button onclick="window.App.openAuthModal(); window.App.closeAllModals();" class="flex flex-col items-start p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 active:scale-95 transition text-left">
+          <div class="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-2">
+            <i data-lucide="cloud" class="w-5 h-5"></i>
+          </div>
+          <span class="text-xs font-bold text-slate-900 dark:text-slate-100">Sincronização</span>
+          <span class="text-[10px] text-slate-400">Login / Nuvem</span>
+        </button>
+      </div>
+
+      <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-xs">
+        <button onclick="window.App.toggleTheme()" class="flex items-center gap-2 text-slate-600 dark:text-slate-300 font-semibold py-2 px-3 rounded-xl bg-slate-100 dark:bg-slate-800">
+          <i data-lucide="moon" class="w-4 h-4 hidden dark:block"></i>
+          <i data-lucide="sun" class="w-4 h-4 block dark:hidden"></i>
+          <span>Tema</span>
+        </button>
+        <button onclick="window.App.closeAllModals()" class="py-2 px-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl font-bold">
+          Fechar
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- 1. MODAL: NOVO LANÇAMENTO -->
   <div id="modal-transaction" class="app-modal fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
@@ -975,8 +1132,254 @@
     </div>
   </div>
 
+  <!-- 8. MODAL: AUTENTICAÇÃO / LOGIN & CADASTRO -->
+  <div id="modal-auth" class="app-modal fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700 animate-fade-in">
+      <div class="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-slate-700/60 pb-3">
+        <h3 id="auth-modal-title" class="text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+          <i data-lucide="cloud" class="w-5 h-5 text-indigo-500"></i> Sincronização em Nuvem
+        </h3>
+        <button onclick="window.App.closeAllModals()" class="text-slate-400 hover:text-slate-600 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Estado Logado -->
+      <div id="auth-logged-in-view" class="hidden space-y-4 text-center py-2">
+        <div class="w-16 h-16 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto text-2xl font-black" id="auth-user-avatar">
+          U
+        </div>
+        <div>
+          <h4 class="font-bold text-slate-900 dark:text-slate-100 text-base" id="auth-user-name">Usuário Conectado</h4>
+          <p class="text-xs text-slate-500" id="auth-user-email">usuario@email.com</p>
+        </div>
+        <div class="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-2xl text-xs text-emerald-800 dark:text-emerald-300 font-semibold flex items-center justify-center gap-2">
+          <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i> Sincronização em tempo real ativa no iPhone e PC
+        </div>
+
+        <!-- Painel de Compartilhamento de Casal / Família -->
+        <div class="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/60 text-left space-y-3">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+              <i data-lucide="users" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <h5 class="text-xs font-bold text-slate-900 dark:text-slate-100">Cofre de Casal & Família</h5>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400">Sincronize com a conta Google da sua esposa</p>
+            </div>
+          </div>
+
+          <!-- Caso 1: Usuário Dono (Mostra seu código) -->
+          <div id="family-owner-box" class="space-y-2">
+            <span class="text-[11px] font-semibold text-slate-600 dark:text-slate-300 block">
+              Seu Código de Compartilhamento:
+            </span>
+            <div class="flex items-center gap-2">
+              <input type="text" id="family-my-code" readonly class="flex-1 px-3 py-2 bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800 rounded-xl font-mono font-bold text-sm text-indigo-600 dark:text-indigo-400 text-center tracking-wider" value="Carregando...">
+              <button type="button" onclick="window.App.copyFamilyCode()" class="p-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-sm" title="Copiar Código">
+                <i data-lucide="copy" class="w-4 h-4"></i>
+              </button>
+              <button type="button" onclick="window.App.shareFamilyCodeWhatsApp()" class="p-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm" title="Enviar no WhatsApp">
+                <i data-lucide="message-circle" class="w-4 h-4"></i>
+              </button>
+            </div>
+            <p class="text-[11px] text-slate-400 leading-relaxed">
+              👉 Envie este código para a sua esposa. Ela entra no app com o Google dela e digita esse código para os dois compartilharem o mesmo extrato em tempo real.
+            </p>
+
+            <div class="pt-2 border-t border-indigo-100 dark:border-indigo-900/60">
+              <button type="button" onclick="document.getElementById('family-connect-form-box').classList.toggle('hidden')" class="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+                Tem um código de outra pessoa? Clique para conectar &rarr;
+              </button>
+            </div>
+          </div>
+
+          <!-- Formulário para Conectar a Outro Código -->
+          <div id="family-connect-form-box" class="hidden space-y-2 pt-2 border-t border-indigo-100 dark:border-indigo-900/60">
+            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300">Digite o Código da Família:</label>
+            <div class="flex items-center gap-2">
+              <input type="text" id="family-input-code" placeholder="Ex: FP-8K2M" class="flex-1 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono font-bold uppercase tracking-wider">
+              <button type="button" id="btn-family-connect" onclick="window.App.handleConnectFamilyCode()" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition">
+                Conectar
+              </button>
+            </div>
+          </div>
+
+          <!-- Caso 2: Já Conectado ao Cofre de Alguém (ex: Esposa no João) -->
+          <div id="family-linked-box" class="hidden space-y-2.5">
+            <div class="p-2.5 rounded-xl bg-emerald-100/80 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-800 dark:text-emerald-300 flex items-center justify-between">
+              <span class="flex items-center gap-1.5 font-bold">
+                <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600"></i> Conectado ao cofre: <span id="family-linked-code-display" class="font-mono underline">---</span>
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">
+              Todas as receitas e despesas que você lançar serão salvas no cofre compartilhado da família em tempo real.
+            </p>
+            <button type="button" onclick="window.App.handleDisconnectFamily()" class="text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:underline">
+              Desconectar do cofre compartilhado
+            </button>
+          </div>
+        </div>
+
+        <div class="pt-2 flex justify-center gap-2">
+          <button onclick="window.App.handleLogout()" class="px-5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:hover:bg-rose-900 dark:text-rose-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+            <i data-lucide="log-out" class="w-4 h-4"></i> Desconectar da Conta
+          </button>
+        </div>
+      </div>
+
+      <!-- Estado Deslogado: Abas Entrar / Cadastrar -->
+      <div id="auth-logged-out-view">
+        <!-- Alternador de Abas -->
+        <div class="flex border-b border-slate-200 dark:border-slate-700 mb-4">
+          <button id="tab-auth-login" onclick="window.App.switchAuthTab('login')" class="flex-1 py-2 text-xs font-bold border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400 transition">
+            Entrar na Conta
+          </button>
+          <button id="tab-auth-register" onclick="window.App.switchAuthTab('register')" class="flex-1 py-2 text-xs font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition">
+            Criar Nova Conta
+          </button>
+        </div>
+
+        <!-- Botão Google -->
+        <button type="button" onclick="window.App.handleGoogleLogin()" class="w-full py-2.5 px-4 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center justify-center gap-2.5 shadow-sm transition mb-4">
+          <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+          Continuar com o Google
+        </button>
+
+        <div class="flex items-center gap-3 my-3">
+          <div class="h-px bg-slate-200 dark:bg-slate-700 flex-1"></div>
+          <span class="text-[11px] font-bold text-slate-400 uppercase">ou com e-mail</span>
+          <div class="h-px bg-slate-200 dark:bg-slate-700 flex-1"></div>
+        </div>
+
+        <!-- Form de Autenticação -->
+        <form id="form-auth" class="space-y-3">
+          <div id="auth-name-group" class="hidden">
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Seu Nome</label>
+            <input type="text" id="auth-name" placeholder="Ex: João Silva" class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">E-mail</label>
+            <input type="email" id="auth-email" placeholder="seu@email.com" required class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm">
+          </div>
+
+          <div>
+            <div class="flex justify-between items-center mb-1">
+              <label class="block text-xs font-bold text-slate-500 uppercase">Senha</label>
+              <button type="button" id="btn-forgot-password" onclick="window.App.handleForgotPassword()" class="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">Esqueci a senha</button>
+            </div>
+            <input type="password" id="auth-password" placeholder="••••••••" required minlength="6" class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm">
+          </div>
+
+          <div id="auth-error-msg" class="hidden p-2.5 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 rounded-xl text-xs text-rose-700 dark:text-rose-300 font-medium"></div>
+
+          <div class="pt-2">
+            <button type="submit" id="btn-auth-submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-500/20 transition">
+              Entrar
+            </button>
+          </div>
+        </form>
+
+        <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700/60 text-center">
+          <button type="button" onclick="window.App.openFirebaseConfigModal()" class="text-xs text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition flex items-center justify-center gap-1 mx-auto">
+            <i data-lucide="settings" class="w-3.5 h-3.5"></i> Configurar Chaves do Firebase
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9. MODAL: CONFIGURAÇÃO DO FIREBASE (NUVEM) -->
+  <div id="modal-firebase-config" class="app-modal fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700 max-h-[90vh] overflow-y-auto animate-fade-in">
+      <div class="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-slate-700/60 pb-3">
+        <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+          <i data-lucide="database" class="w-5 h-5 text-indigo-500"></i> Configuração do Firebase
+        </h3>
+        <button onclick="window.App.closeAllModals()" class="text-slate-400 hover:text-slate-600 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-500 mb-4">
+        Cole as credenciais do seu projeto gratuito do <strong>Google Firebase</strong> para habilitar a sincronização em tempo real entre seu iPhone e o computador.
+      </p>
+
+      <form id="form-firebase-config" class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">API Key</label>
+          <input type="text" id="fb-api-key" placeholder="AIzaSy..." required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Auth Domain</label>
+            <input type="text" id="fb-auth-domain" placeholder="seu-app.firebaseapp.com" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Project ID</label>
+            <input type="text" id="fb-project-id" placeholder="financepro-12345" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Storage Bucket</label>
+            <input type="text" id="fb-storage-bucket" placeholder="seu-app.appspot.com" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">App ID</label>
+            <input type="text" id="fb-app-id" placeholder="1:123456:web:abcd..." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono">
+          </div>
+        </div>
+
+        <div class="pt-3 flex justify-end gap-2">
+          <button type="button" onclick="window.App.closeAllModals()" class="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition">Cancelar</button>
+          <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition">Salvar & Conectar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: AJUSTAR TODOS OS TETOS DE GASTOS RAPIDAMENTE -->
+  <div id="modal-quick-budgets" class="app-modal fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 sm:p-6 w-full max-w-lg shadow-2xl border border-slate-100 dark:border-slate-700/80 max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700/80">
+        <div>
+          <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <i data-lucide="sliders" class="w-5 h-5 text-indigo-600"></i> Ajustar Tetos de Gastos
+          </h3>
+          <p class="text-xs text-slate-500 mt-0.5">Edite o limite de cada categoria e salve tudo de uma só vez na nuvem.</p>
+        </div>
+        <button onclick="window.App.closeAllModals()" class="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="form-quick-budgets" onsubmit="window.App.handleSaveAllBudgets(event)" class="flex flex-col flex-1 overflow-hidden pt-3">
+        <div id="quick-budgets-inputs-list" class="space-y-2.5 overflow-y-auto pr-1 flex-1 py-1 max-h-[60vh]">
+          <!-- Linhas de categorias geradas dinamicamente -->
+        </div>
+
+        <div class="pt-4 border-t border-slate-100 dark:border-slate-700 flex items-center justify-end gap-2 mt-2">
+          <button type="button" onclick="window.App.closeAllModals()" class="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition">Cancelar</button>
+          <button type="submit" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-1.5 active:scale-95">
+            <i data-lucide="check" class="w-4 h-4"></i> Salvar Todos os Tetos
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- CONTAINER DE TOASTS -->
   <div id="toast-container"></div>
+
+  <!-- GOOGLE FIREBASE SDK (COMPAT) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-sync.js"></script>
 
   <!-- SCRIPTS DA APLICAÇÃO -->
   <script src="js/state.js"></script>

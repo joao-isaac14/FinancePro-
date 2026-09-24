@@ -1554,6 +1554,61 @@ class AppController {
     }
   }
 
+  openQuickBudgetsModal() {
+    const modal = document.getElementById('modal-quick-budgets');
+    const container = document.getElementById('quick-budgets-inputs-list');
+    if (!modal || !container) return;
+
+    // Apenas categorias de despesa (onde tetos fazem sentido)
+    const expenseCategories = window.State.getCategories().filter(c => c.type === 'expense');
+
+    container.innerHTML = expenseCategories.map(cat => {
+      const budgetVal = (typeof cat.budget === 'number') ? cat.budget : 0;
+      return `
+        <div class="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <span class="w-3.5 h-3.5 rounded-full flex-shrink-0" style="background-color: ${cat.color || '#6366F1'}"></span>
+            <div class="truncate">
+              <span class="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200 block truncate">${cat.name}</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5 flex-shrink-0">
+            <span class="text-xs font-semibold text-slate-400">R$</span>
+            <input type="number" step="0.01" min="0" 
+              name="cat_budget_${cat.id}" 
+              data-cat-id="${cat.id}"
+              value="${budgetVal}" 
+              class="w-28 sm:w-32 px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-100 text-right focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    modal.classList.remove('hidden');
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  handleSaveAllBudgets(event) {
+    if (event) event.preventDefault();
+    const container = document.getElementById('quick-budgets-inputs-list');
+    if (!container) return;
+
+    const inputs = container.querySelectorAll('input[data-cat-id]');
+    let count = 0;
+    inputs.forEach(input => {
+      const catId = input.getAttribute('data-cat-id');
+      const val = parseFloat(input.value) || 0;
+      const cat = window.State.getCategoryById(catId);
+      if (cat) {
+        window.State.updateCategory(catId, { ...cat, budget: val });
+        count++;
+      }
+    });
+
+    this.closeAllModals();
+    this.showToast(`Tetos de ${count} categorias salvos e sincronizados com a nuvem!`, 'success');
+  }
+
   openMobileMenuModal() {
     this.closeAllModals();
     const modal = document.getElementById('modal-mobile-menu');

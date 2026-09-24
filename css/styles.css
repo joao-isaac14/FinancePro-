@@ -136,7 +136,16 @@ body {
   padding-bottom: max(1rem, env(safe-area-inset-bottom, 16px));
 }
 
+.pt-safe {
+  padding-top: max(0.75rem, env(safe-area-inset-top, 44px));
+}
+
 @media screen and (max-width: 767px) {
+  /* Evitar colisão com Notch / Barra de Status / Relógio do iPhone */
+  header {
+    padding-top: max(0.85rem, env(safe-area-inset-top, 47px)) !important;
+  }
+
   /* Evitar auto-zoom desagradável no iOS Safari */
   input, select, textarea {
     font-size: 16px !important;

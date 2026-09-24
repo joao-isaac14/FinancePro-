@@ -9,9 +9,11 @@ class AppController {
   }
 
   init() {
+    this.authMode = 'login';
     this.applyTheme(window.State.getSettings().theme);
     this.bindGlobalEvents();
     this.setupMonthSelector();
+    this.setupFirebaseSyncListeners();
     this.renderCurrentView();
 
     // Reagir a qualquer alteração de estado
@@ -127,7 +129,7 @@ class AppController {
   switchTab(tabId) {
     this.currentTab = tabId;
 
-    // Atualizar classes dos links de navegação
+    // Atualizar classes dos links de navegação (Desktop)
     document.querySelectorAll('[data-nav-tab]').forEach(btn => {
       const active = btn.getAttribute('data-nav-tab') === tabId;
       if (active) {
@@ -136,6 +138,27 @@ class AppController {
       } else {
         btn.classList.remove('bg-indigo-50', 'text-indigo-600', 'dark:bg-indigo-950/50', 'dark:text-indigo-400', 'font-semibold');
         btn.classList.add('text-slate-600', 'dark:text-slate-400', 'hover:bg-slate-100', 'dark:hover:bg-slate-800');
+      }
+    });
+
+    // Atualizar classes dos links de navegação (Mobile Bottom Bar)
+    document.querySelectorAll('[data-mobile-nav-tab]').forEach(btn => {
+      const active = btn.getAttribute('data-mobile-nav-tab') === tabId;
+      const span = btn.querySelector('span');
+      if (active) {
+        btn.classList.add('text-indigo-600', 'dark:text-indigo-400');
+        btn.classList.remove('text-slate-500', 'dark:text-slate-400');
+        if (span) {
+          span.classList.remove('font-medium');
+          span.classList.add('font-bold');
+        }
+      } else {
+        btn.classList.remove('text-indigo-600', 'dark:text-indigo-400');
+        btn.classList.add('text-slate-500', 'dark:text-slate-400');
+        if (span) {
+          span.classList.remove('font-bold');
+          span.classList.add('font-medium');
+        }
       }
     });
 
@@ -330,6 +353,7 @@ class AppController {
     const categories = window.State.getCategories();
     const accounts = window.State.getAccounts();
     const tbody = document.getElementById('transactions-table-body');
+    const mobileCardsContainer = document.getElementById('transactions-mobile-cards');
     const countEl = document.getElementById('tx-count-badge');
 
     if (countEl) countEl.textContent = `${transactions.length} lançamento(s)`;
@@ -337,61 +361,129 @@ class AppController {
     // Preencher selects de filtros se ainda não foram
     this.populateFilterDropdowns();
 
-    if (!tbody) return;
-
     if (transactions.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-slate-500">Nenhum lançamento encontrado para os filtros selecionados.</td></tr>`;
+      if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-slate-500">Nenhum lançamento encontrado para os filtros selecionados.</td></tr>`;
+      if (mobileCardsContainer) {
+        mobileCardsContainer.innerHTML = `
+          <div class="text-center py-12 px-4 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm">
+            <div class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center mx-auto mb-3 text-slate-400">
+              <i data-lucide="inbox" class="w-6 h-6"></i>
+            </div>
+            <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">Nenhum lançamento encontrado</p>
+            <p class="text-xs text-slate-400 mt-1">Tente ajustar os filtros ou adicione uma nova movimentação.</p>
+          </div>
+        `;
+      }
       this.updateSelectedTransactionsUI();
       return;
     }
 
-    tbody.innerHTML = transactions.map(tx => {
-      const cat = categories.find(c => c.id === tx.categoryId);
-      const acc = accounts.find(a => a.id === tx.accountId);
-      const isExp = tx.type === 'expense';
+    if (tbody) {
+      tbody.innerHTML = transactions.map(tx => {
+        const cat = categories.find(c => c.id === tx.categoryId);
+        const acc = accounts.find(a => a.id === tx.accountId);
+        const isExp = tx.type === 'expense';
 
-      return `
-        <tr class="border-b border-slate-100 dark:border-slate-800/80 hover:bg-slate-50/70 dark:hover:bg-slate-800/50 transition text-sm">
-          <td class="py-3 px-3 w-10 text-center">
-            <input type="checkbox" class="tx-row-checkbox rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer w-4 h-4" data-id="${tx.id}" onchange="window.App.handleRowCheckboxChange()">
-          </td>
-          <td class="py-3 px-3 text-slate-500 dark:text-slate-400 whitespace-nowrap">${StateManager.formatDateBR(tx.date)}</td>
-          <td class="py-3 px-3">
-            <div class="font-medium text-slate-900 dark:text-slate-100">${tx.description}</div>
-            ${tx.notes ? `<div class="text-xs text-slate-400 italic">${tx.notes}</div>` : ''}
-          </td>
-          <td class="py-3 px-3">
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200">
-              <span class="w-2 h-2 rounded-full" style="background-color: ${cat?.color || '#9CA3AF'}"></span>
-              ${cat?.name || 'Geral'}
-            </span>
-          </td>
-          <td class="py-3 px-3 text-xs text-slate-600 dark:text-slate-400">
-            <span class="flex items-center gap-1">
-              <i data-lucide="${acc?.icon || 'landmark'}" class="w-3.5 h-3.5"></i>
-              ${acc?.name || 'Conta Padrão'}
-            </span>
-          </td>
-          <td class="py-3 px-3 text-right font-bold whitespace-nowrap ${isExp ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}">
-            ${isExp ? '-' : '+'} ${StateManager.formatCurrency(tx.amount)}
-            ${tx.isInstallment ? `<span class="block text-[10px] text-purple-600 dark:text-purple-400 font-normal">Parc. ${tx.installmentCurrent}/${tx.installmentTotal}</span>` : ''}
-          </td>
-          <td class="py-3 px-3 text-center">
-            <button onclick="window.App.toggleStatus('${tx.id}')" title="Alternar status" class="px-2.5 py-1 rounded-full text-xs font-medium transition cursor-pointer ${tx.status === 'paid' ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 hover:bg-amber-200 dark:bg-amber-950/60 dark:text-amber-300'}">
-              ${tx.status === 'paid' ? '✓ Efetivado' : '⏳ Pendente'}
-            </button>
-          </td>
-          <td class="py-3 px-3 text-right whitespace-nowrap">
-            <button onclick="window.App.openTransactionModal('${tx.id}')" class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition mr-1" title="Editar lançamento">
-              <i data-lucide="edit-3" class="w-4 h-4"></i>
-            </button>
-            <button onclick="window.App.deleteTransactionPrompt('${tx.id}')" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition" title="Excluir lançamento">
-              <i data-lucide="trash-2" class="w-4 h-4"></i>
-            </button>
-          </td>
-        </tr>
-      `;
-    }).join('');
+        return `
+          <tr class="border-b border-slate-100 dark:border-slate-800/80 hover:bg-slate-50/70 dark:hover:bg-slate-800/50 transition text-sm">
+            <td class="py-3 px-3 w-10 text-center">
+              <input type="checkbox" class="tx-row-checkbox rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer w-4 h-4" data-id="${tx.id}" onchange="window.App.handleRowCheckboxChange()">
+            </td>
+            <td class="py-3 px-3 text-slate-500 dark:text-slate-400 whitespace-nowrap">${StateManager.formatDateBR(tx.date)}</td>
+            <td class="py-3 px-3">
+              <div class="font-medium text-slate-900 dark:text-slate-100">${tx.description}</div>
+              ${tx.notes ? `<div class="text-xs text-slate-400 italic">${tx.notes}</div>` : ''}
+            </td>
+            <td class="py-3 px-3">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200">
+                <span class="w-2 h-2 rounded-full" style="background-color: ${cat?.color || '#9CA3AF'}"></span>
+                ${cat?.name || 'Geral'}
+              </span>
+            </td>
+            <td class="py-3 px-3 text-xs text-slate-600 dark:text-slate-400">
+              <span class="flex items-center gap-1">
+                <i data-lucide="${acc?.icon || 'landmark'}" class="w-3.5 h-3.5"></i>
+                ${acc?.name || 'Conta Padrão'}
+              </span>
+              ${tx.createdBy ? `<span class="inline-flex items-center gap-1 text-[10px] text-slate-400 mt-0.5"><i data-lucide="user" class="w-2.5 h-2.5"></i>${tx.createdBy}</span>` : ''}
+            </td>
+            <td class="py-3 px-3 text-right font-bold whitespace-nowrap ${isExp ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}">
+              ${isExp ? '-' : '+'} ${StateManager.formatCurrency(tx.amount)}
+              ${tx.isInstallment ? `<span class="block text-[10px] text-purple-600 dark:text-purple-400 font-normal">Parc. ${tx.installmentCurrent}/${tx.installmentTotal}</span>` : ''}
+            </td>
+            <td class="py-3 px-3 text-center">
+              <button onclick="window.App.toggleStatus('${tx.id}')" title="Alternar status" class="px-2.5 py-1 rounded-full text-xs font-medium transition cursor-pointer ${tx.status === 'paid' ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 hover:bg-amber-200 dark:bg-amber-950/60 dark:text-amber-300'}">
+                ${tx.status === 'paid' ? '✓ Efetivado' : '⏳ Pendente'}
+              </button>
+            </td>
+            <td class="py-3 px-3 text-right whitespace-nowrap">
+              <button onclick="window.App.openTransactionModal('${tx.id}')" class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition mr-1" title="Editar lançamento">
+                <i data-lucide="edit-3" class="w-4 h-4"></i>
+              </button>
+              <button onclick="window.App.deleteTransactionPrompt('${tx.id}')" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition" title="Excluir lançamento">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    if (mobileCardsContainer) {
+      mobileCardsContainer.innerHTML = transactions.map(tx => {
+        const cat = categories.find(c => c.id === tx.categoryId);
+        const acc = accounts.find(a => a.id === tx.accountId);
+        const isExp = tx.type === 'expense';
+
+        return `
+          <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm flex flex-col gap-2.5">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${isExp ? 'bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400' : 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400'}">
+                  <i data-lucide="${isExp ? 'arrow-down-right' : 'arrow-up-right'}" class="w-5 h-5"></i>
+                </div>
+                <div class="min-w-0">
+                  <div class="font-bold text-slate-900 dark:text-slate-100 text-sm truncate">${tx.description}</div>
+                  <div class="flex items-center flex-wrap gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+                    <span class="inline-flex items-center gap-1">
+                      <span class="w-1.5 h-1.5 rounded-full" style="background-color: ${cat?.color || '#9CA3AF'}"></span>
+                      ${cat?.name || 'Geral'}
+                    </span>
+                    <span>•</span>
+                    <span>${acc?.name || 'Conta Padrão'}</span>
+                    ${tx.createdBy ? `<span class="inline-flex items-center gap-0.5 text-[10px] text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-1.5 py-0.5 rounded font-medium"><i data-lucide="user" class="w-2.5 h-2.5"></i>${tx.createdBy}</span>` : ''}
+                  </div>
+                </div>
+              </div>
+              <div class="text-right shrink-0">
+                <span class="font-extrabold text-sm ${isExp ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}">
+                  ${isExp ? '-' : '+'} ${StateManager.formatCurrency(tx.amount)}
+                </span>
+                ${tx.isInstallment ? `<span class="block text-[10px] text-purple-600 dark:text-purple-400 font-semibold">${tx.installmentCurrent}/${tx.installmentTotal}x</span>` : ''}
+              </div>
+            </div>
+
+            ${tx.notes ? `<p class="text-xs text-slate-400 italic bg-slate-50 dark:bg-slate-900/50 px-2.5 py-1.5 rounded-lg">${tx.notes}</p>` : ''}
+
+            <div class="pt-2 border-t border-slate-100 dark:border-slate-700/60 flex items-center justify-between text-xs">
+              <span class="text-slate-400 text-[11px]">${StateManager.formatDateBR(tx.date)}</span>
+              
+              <div class="flex items-center gap-1.5">
+                <button onclick="window.App.toggleStatus('${tx.id}')" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold transition ${tx.status === 'paid' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'}">
+                  ${tx.status === 'paid' ? '✓ Pago' : '⏳ Pendente'}
+                </button>
+                <button onclick="window.App.openTransactionModal('${tx.id}')" class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition" title="Editar">
+                  <i data-lucide="edit-3" class="w-4 h-4"></i>
+                </button>
+                <button onclick="window.App.deleteTransactionPrompt('${tx.id}')" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition" title="Excluir">
+                  <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
 
     this.updateSelectedTransactionsUI();
   }
@@ -786,6 +878,15 @@ class AppController {
     const openTxBtns = document.querySelectorAll('.btn-open-new-tx');
     openTxBtns.forEach(b => b.addEventListener('click', () => this.openTransactionModal()));
 
+    // Fechar modais ao clicar no fundo escuro (backdrop)
+    document.querySelectorAll('.app-modal').forEach(modal => {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          this.closeAllModals();
+        }
+      });
+    });
+
     // Form de Nova / Editar Transação
     const formTx = document.getElementById('form-new-transaction');
     if (formTx) {
@@ -1013,6 +1114,71 @@ class AppController {
     const fileInput = document.getElementById('import-file-input');
     if (fileInput) {
       fileInput.addEventListener('change', (e) => this.handleFileImport(e));
+    }
+
+    // Form de Autenticação (Login / Cadastro)
+    const formAuth = document.getElementById('form-auth');
+    if (formAuth) {
+      formAuth.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const errBox = document.getElementById('auth-error-msg');
+        if (errBox) {
+          errBox.classList.add('hidden');
+          errBox.textContent = '';
+        }
+
+        const email = document.getElementById('auth-email').value;
+        const password = document.getElementById('auth-password').value;
+        const name = document.getElementById('auth-name')?.value || '';
+
+        const submitBtn = document.getElementById('btn-auth-submit');
+        const originalText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Processando...';
+
+        try {
+          if (this.authMode === 'register') {
+            await window.FirebaseSync.registerWithEmail(email, password, name);
+            this.showToast('Conta criada com sucesso! Sincronização em nuvem ativada.', 'success');
+          } else {
+            await window.FirebaseSync.loginWithEmail(email, password);
+            this.showToast('Login realizado com sucesso! Seus dados foram sincronizados.', 'success');
+          }
+          this.closeAllModals();
+          formAuth.reset();
+        } catch (err) {
+          if (errBox) {
+            errBox.textContent = this.translateFirebaseError(err.message || err.code);
+            errBox.classList.remove('hidden');
+          }
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalText;
+        }
+      });
+    }
+
+    // Form de Configuração do Firebase
+    const formFb = document.getElementById('form-firebase-config');
+    if (formFb) {
+      formFb.addEventListener('submit', (e) => {
+        e.preventDefault();
+        try {
+          const config = {
+            apiKey: document.getElementById('fb-api-key').value.trim(),
+            authDomain: document.getElementById('fb-auth-domain').value.trim(),
+            projectId: document.getElementById('fb-project-id').value.trim(),
+            storageBucket: document.getElementById('fb-storage-bucket')?.value.trim() || '',
+            appId: document.getElementById('fb-app-id')?.value.trim() || ''
+          };
+
+          window.FirebaseSync.saveFirebaseConfig(config);
+          this.closeAllModals();
+          this.showToast('Configurações da Nuvem salvas e conectadas!', 'success');
+        } catch (err) {
+          alert('Erro ao salvar configuração: ' + err.message);
+        }
+      });
     }
   }
 
@@ -1388,6 +1554,70 @@ class AppController {
     }
   }
 
+  openQuickBudgetsModal() {
+    const modal = document.getElementById('modal-quick-budgets');
+    const container = document.getElementById('quick-budgets-inputs-list');
+    if (!modal || !container) return;
+
+    // Apenas categorias de despesa (onde tetos fazem sentido)
+    const expenseCategories = window.State.getCategories().filter(c => c.type === 'expense');
+
+    container.innerHTML = expenseCategories.map(cat => {
+      const budgetVal = (typeof cat.budget === 'number') ? cat.budget : 0;
+      return `
+        <div class="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <span class="w-3.5 h-3.5 rounded-full flex-shrink-0" style="background-color: ${cat.color || '#6366F1'}"></span>
+            <div class="truncate">
+              <span class="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200 block truncate">${cat.name}</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5 flex-shrink-0">
+            <span class="text-xs font-semibold text-slate-400">R$</span>
+            <input type="number" step="0.01" min="0" 
+              name="cat_budget_${cat.id}" 
+              data-cat-id="${cat.id}"
+              value="${budgetVal}" 
+              class="w-28 sm:w-32 px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-100 text-right focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    modal.classList.remove('hidden');
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  handleSaveAllBudgets(event) {
+    if (event) event.preventDefault();
+    const container = document.getElementById('quick-budgets-inputs-list');
+    if (!container) return;
+
+    const inputs = container.querySelectorAll('input[data-cat-id]');
+    let count = 0;
+    inputs.forEach(input => {
+      const catId = input.getAttribute('data-cat-id');
+      const val = parseFloat(input.value) || 0;
+      const cat = window.State.getCategoryById(catId);
+      if (cat) {
+        window.State.updateCategory(catId, { ...cat, budget: val });
+        count++;
+      }
+    });
+
+    this.closeAllModals();
+    this.showToast(`Tetos de ${count} categorias salvos e sincronizados com a nuvem!`, 'success');
+  }
+
+  openMobileMenuModal() {
+    this.closeAllModals();
+    const modal = document.getElementById('modal-mobile-menu');
+    if (modal) {
+      modal.classList.remove('hidden');
+      if (window.lucide) window.lucide.createIcons();
+    }
+  }
+
   closeAllModals() {
     document.querySelectorAll('.app-modal').forEach(m => m.classList.add('hidden'));
   }
@@ -1452,6 +1682,306 @@ class AppController {
     };
 
     reader.readAsText(file, 'ISO-8859-1');
+  }
+
+  // --- Restauração de Backup JSON ---
+  handleRestoreJSON(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target.result;
+      const success = window.State.importBackupJSON(content);
+      if (success) {
+        this.showToast('Backup restaurado com sucesso! Todos os seus dados foram carregados.', 'success');
+        this.renderCurrentView();
+      } else {
+        alert('Erro ao restaurar o arquivo de backup. Verifique se é um arquivo .json válido.');
+      }
+    };
+    reader.readAsText(file, 'UTF-8');
+  }
+
+  // --- Autenticação & Nuvem Firebase ---
+  setupFirebaseSyncListeners() {
+    if (!window.FirebaseSync) return;
+
+    window.FirebaseSync.onAuthChange((user) => {
+      const userLabel = document.getElementById('auth-user-label');
+      const authBtn = document.getElementById('btn-auth-profile');
+
+      if (user) {
+        const displayName = user.displayName || user.email.split('@')[0];
+        if (userLabel) userLabel.textContent = displayName;
+        if (authBtn) {
+          authBtn.classList.remove('bg-indigo-50', 'text-indigo-700');
+          authBtn.classList.add('bg-emerald-50', 'text-emerald-700', 'dark:bg-emerald-950/60', 'dark:text-emerald-300');
+        }
+      } else {
+        if (userLabel) userLabel.textContent = 'Entrar / Cadastrar';
+        if (authBtn) {
+          authBtn.classList.add('bg-indigo-50', 'text-indigo-700');
+          authBtn.classList.remove('bg-emerald-50', 'text-emerald-700', 'dark:bg-emerald-950/60', 'dark:text-emerald-300');
+        }
+      }
+    });
+
+    window.FirebaseSync.onSyncStatusChange((status, message) => {
+      const dot = document.getElementById('sync-dot');
+      const text = document.getElementById('sync-text');
+
+      if (dot && text) {
+        text.textContent = message;
+        dot.className = 'w-2 h-2 rounded-full';
+
+        if (status === 'synced') {
+          dot.classList.add('bg-emerald-500');
+        } else if (status === 'syncing') {
+          dot.classList.add('bg-amber-500', 'animate-pulse');
+        } else if (status === 'unconfigured') {
+          dot.classList.add('bg-slate-400');
+        } else {
+          dot.classList.add('bg-rose-500');
+        }
+      }
+    });
+
+    if (window.FirebaseSync.onFamilyChange) {
+      window.FirebaseSync.onFamilyChange(() => {
+        this.updateFamilySyncUI();
+      });
+    }
+  }
+
+  openAuthModal() {
+    const modal = document.getElementById('modal-auth');
+    if (!modal) return;
+
+    const user = window.FirebaseSync?.currentUser;
+    const loggedInView = document.getElementById('auth-logged-in-view');
+    const loggedOutView = document.getElementById('auth-logged-out-view');
+
+    if (user) {
+      if (loggedInView) loggedInView.classList.remove('hidden');
+      if (loggedOutView) loggedOutView.classList.add('hidden');
+
+      const nameEl = document.getElementById('auth-user-name');
+      const emailEl = document.getElementById('auth-user-email');
+      const avatarEl = document.getElementById('auth-user-avatar');
+
+      const name = user.displayName || user.email.split('@')[0];
+      if (nameEl) nameEl.textContent = name;
+      if (emailEl) emailEl.textContent = user.email || '';
+      if (avatarEl) avatarEl.textContent = name.charAt(0).toUpperCase();
+
+      this.updateFamilySyncUI();
+    } else {
+      if (loggedInView) loggedInView.classList.add('hidden');
+      if (loggedOutView) loggedOutView.classList.remove('hidden');
+      this.switchAuthTab('login');
+    }
+
+    modal.classList.remove('hidden');
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  // --- Gerenciamento de Cofre de Casal / Família ---
+  updateFamilySyncUI() {
+    if (!window.FirebaseSync) return;
+    const isLinked = window.FirebaseSync.isLinkedToFamily();
+    const myCode = window.FirebaseSync.myFamilyCode || 'Carregando...';
+    const linkedCode = window.FirebaseSync.getFamilyCodeDisplay();
+
+    const ownerBox = document.getElementById('family-owner-box');
+    const linkedBox = document.getElementById('family-linked-box');
+    const myCodeInput = document.getElementById('family-my-code');
+    const linkedCodeEl = document.getElementById('family-linked-code-display');
+
+    if (isLinked) {
+      if (ownerBox) ownerBox.classList.add('hidden');
+      if (linkedBox) linkedBox.classList.remove('hidden');
+      if (linkedCodeEl) linkedCodeEl.textContent = linkedCode;
+    } else {
+      if (ownerBox) ownerBox.classList.remove('hidden');
+      if (linkedBox) linkedBox.classList.add('hidden');
+      if (myCodeInput) myCodeInput.value = myCode;
+    }
+
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  copyFamilyCode() {
+    const input = document.getElementById('family-my-code');
+    if (!input || !input.value || input.value === 'Carregando...') return;
+    const val = input.value;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(val).then(() => {
+        this.showToast('Código da família copiado!', 'success');
+      }).catch(() => {
+        input.select();
+        document.execCommand('copy');
+        this.showToast('Código copiado!', 'success');
+      });
+    } else {
+      input.select();
+      document.execCommand('copy');
+      this.showToast('Código copiado!', 'success');
+    }
+  }
+
+  shareFamilyCodeWhatsApp() {
+    const input = document.getElementById('family-my-code');
+    if (!input || !input.value || input.value === 'Carregando...') return;
+    const code = input.value;
+    const text = encodeURIComponent(`Oi amor! Acesse o nosso aplicativo FinancePro (https://joao-isaac14.github.io/FinancePro-/) com o seu Google e use este código para sincronizar nosso cofre em tempo real: ${code}`);
+    window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+  }
+
+  async handleConnectFamilyCode() {
+    const input = document.getElementById('family-input-code');
+    const btn = document.getElementById('btn-family-connect');
+    if (!input) return;
+    const code = input.value.trim();
+    if (!code) {
+      this.showToast('Por favor, informe o código da família.', 'warning');
+      return;
+    }
+
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Conectando...';
+
+    try {
+      await window.FirebaseSync.connectToFamilyCode(code);
+      this.showToast('Conectado ao cofre da família com sucesso!', 'success');
+      input.value = '';
+      document.getElementById('family-connect-form-box')?.classList.add('hidden');
+      this.updateFamilySyncUI();
+      this.renderCurrentView();
+    } catch (err) {
+      this.showToast(err.message, 'danger');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+  }
+
+  async handleDisconnectFamily() {
+    if (confirm('Deseja realmente desconectar deste cofre compartilhado e voltar ao seu individual?')) {
+      await window.FirebaseSync.disconnectFromFamily();
+      this.showToast('Desconectado do cofre compartilhado.', 'info');
+      this.updateFamilySyncUI();
+      this.renderCurrentView();
+    }
+  }
+
+  switchAuthTab(mode) {
+    this.authMode = mode;
+    const tabLogin = document.getElementById('tab-auth-login');
+    const tabRegister = document.getElementById('tab-auth-register');
+    const nameGroup = document.getElementById('auth-name-group');
+    const forgotBtn = document.getElementById('btn-forgot-password');
+    const submitBtn = document.getElementById('btn-auth-submit');
+    const errBox = document.getElementById('auth-error-msg');
+
+    if (errBox) errBox.classList.add('hidden');
+
+    if (mode === 'register') {
+      if (tabRegister) tabRegister.className = 'flex-1 py-2 text-xs font-bold border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400 transition';
+      if (tabLogin) tabLogin.className = 'flex-1 py-2 text-xs font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition';
+      if (nameGroup) nameGroup.classList.remove('hidden');
+      if (forgotBtn) forgotBtn.classList.add('hidden');
+      if (submitBtn) submitBtn.textContent = 'Criar Minha Conta';
+    } else {
+      if (tabLogin) tabLogin.className = 'flex-1 py-2 text-xs font-bold border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400 transition';
+      if (tabRegister) tabRegister.className = 'flex-1 py-2 text-xs font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition';
+      if (nameGroup) nameGroup.classList.add('hidden');
+      if (forgotBtn) forgotBtn.classList.remove('hidden');
+      if (submitBtn) submitBtn.textContent = 'Entrar';
+    }
+  }
+
+  async handleGoogleLogin() {
+    try {
+      await window.FirebaseSync.loginWithGoogle();
+      this.showToast('Login com Google realizado com sucesso!', 'success');
+      this.closeAllModals();
+    } catch (err) {
+      const errBox = document.getElementById('auth-error-msg');
+      if (errBox) {
+        errBox.textContent = this.translateFirebaseError(err.message || err.code);
+        errBox.classList.remove('hidden');
+      }
+    }
+  }
+
+  async handleLogout() {
+    try {
+      await window.FirebaseSync.logout();
+      this.showToast('Você desconectou da sua conta.', 'info');
+      this.closeAllModals();
+    } catch (err) {
+      alert('Erro ao desconectar: ' + err.message);
+    }
+  }
+
+  async handleForgotPassword() {
+    const email = document.getElementById('auth-email').value;
+    if (!email) {
+      alert('Por favor, digite seu e-mail no campo acima para redefinir sua senha.');
+      return;
+    }
+    try {
+      await window.FirebaseSync.sendPasswordReset(email);
+      this.showToast(`E-mail de redefinição de senha enviado para ${email}!`, 'info');
+    } catch (err) {
+      alert('Erro ao enviar e-mail: ' + this.translateFirebaseError(err.message || err.code));
+    }
+  }
+
+  openFirebaseConfigModal() {
+    const modal = document.getElementById('modal-firebase-config');
+    if (!modal) return;
+
+    const config = window.FirebaseSync?.getFirebaseConfig();
+    if (config) {
+      document.getElementById('fb-api-key').value = config.apiKey || '';
+      document.getElementById('fb-auth-domain').value = config.authDomain || '';
+      document.getElementById('fb-project-id').value = config.projectId || '';
+      document.getElementById('fb-storage-bucket').value = config.storageBucket || '';
+      document.getElementById('fb-app-id').value = config.appId || '';
+    }
+
+    modal.classList.remove('hidden');
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  translateFirebaseError(msg) {
+    if (!msg) return 'Ocorreu um erro. Tente novamente.';
+    const str = String(msg).toLowerCase();
+    if (str.includes('user-not-found') || str.includes('invalid-credential') || str.includes('wrong-password') || str.includes('invalid-login-credentials')) {
+      return 'E-mail ou senha incorretos.';
+    }
+    if (str.includes('email-already-in-use')) {
+      return 'Este e-mail já está cadastrado. Selecione a aba "Entrar".';
+    }
+    if (str.includes('weak-password')) {
+      return 'A senha deve ter no mínimo 6 caracteres.';
+    }
+    if (str.includes('invalid-email')) {
+      return 'Formato de e-mail inválido.';
+    }
+    if (str.includes('popup-closed-by-user')) {
+      return 'A janela de autenticação foi fechada antes da conclusão.';
+    }
+    if (str.includes('unauthorized-domain')) {
+      return 'Domínio não autorizado. Adicione seu domínio no painel do Firebase.';
+    }
+    if (str.includes('não configurado')) {
+      return 'Configuração da Nuvem necessária. Clique em "Configurar Chaves do Firebase" abaixo.';
+    }
+    return msg;
   }
 }
 
